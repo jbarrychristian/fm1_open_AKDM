@@ -21,7 +21,9 @@ The 16 built-in FM tones, the four acid-engine recipes and the 16 demo projects 
 
 - **FM tones:** TONEWHEEL (rotary organ), COMBO ORG, PIPE ORGAN, WURLI, STAGE EP, HARPSICHRD, FUNK CLAV, MINI LEAD, SYNC LEAD, TAURUS (bass pedals), MOOG BASS, STRINGS (string machine), TAPE FLUTE, TAPE CHOIR, SYNTHBRASS, PROG PAD.
 - **Acid engine:** warm bass, deep pedal, singing lead and square bass.
-- **Demo projects:** ARENA ROCK, GALLOP PROG, CATHEDRAL, RONDO PROG, SYMPHO POP, LUNAR DRIFT, ASTRO ORGAN, WURLI BOUNCE, BAROQUE ROCK, TAPE CHOIR, PROG ODYSSEY, MINI DUEL, FUSION RUN, PEDAL POINT, ARP HORIZON, SLOW BURN. New rhythms include straight rock, half-time, shuffle, gallop, 3+3+2 accents and stomp.
+- **Demo projects:** ARENA ROCK, GALLOP PROG, CATHEDRAL, RONDO 7/8, SYMPHO POP, LUNAR DRIFT, ASTRO ORGAN, WURLI BOUNCE, BAROQUE ROCK, TAPE CHOIR, ODYSSEY 5/4, DUEL 9/8, FUSION 11/8, PEDAL 7/4, ARP HORIZON, SLOW BURN. New rhythms include straight rock, half-time, shuffle, gallop, 3+3+2 accents and stomp.
+
+- **Mixed meters:** the sequencer loops over 16, 32, 48 or 64 steps, so odd bars are packed into one 64-step loop with a short filler bar: 7/8 ×4 + 4/8, 5/4 ×2 + 6/4, 7/4 ×2 + 2/4, 9/8 ×3 + 5/8 and 11/8 ×2 + 10/8. Drums, bass and chords follow each bar's 2+3 beat groups. Add a layout to `meters` in `app/presets.c` and set it as a scene's last field.
 
 These are style sketches, not transcriptions of any recording. The 128-voice DX7 library is unchanged.
 

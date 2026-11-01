@@ -30,7 +30,30 @@ struct scene {
     uint8_t bpm, root, minor, swing, rhythm, motif, count;
     uint8_t decay, delay_steps, feedback, fx_level;
     struct part part[5];
+    uint8_t meter; /* enum meter; 0 is plain 4/4 */
 };
+/* Mixed-meter loops. The sequencer loops over 16..64 steps in pages of
+ * 16, so odd bars are packed into one 64-step loop with a short filler bar.
+ * Each bar lists its length in sixteenths and its beat groups: a mask of
+ * the sixteenth where each group of eighths (2s and 3s) starts. */
+enum { M44, M78, M54, M74, M98, M118, METERS };
+struct bar_shape { uint8_t steps; uint32_t groups; };
+struct meter_shape { uint8_t bars; struct bar_shape bar[5]; };
+#define G(a, b, c, d) ((1UL << (a)) | (1UL << (b)) | (1UL << (c)) | (1UL << (d)))
+static const struct meter_shape meters[METERS] = {
+    {4, {{16,G(0,4,8,12)},{16,G(0,4,8,12)},{16,G(0,4,8,12)},{16,G(0,4,8,12)}}},
+    /* 7/8 x4 (2+2+3) + 4/8 */
+    {5, {{14,G(0,4,8,8)},{14,G(0,4,8,8)},{14,G(0,4,8,8)},{14,G(0,4,8,8)},{8,G(0,4,4,4)}}},
+    /* 5/4 x2 (3+3+2+2) + 6/4 (3+3+3+3) */
+    {3, {{20,G(0,6,12,16)},{20,G(0,6,12,16)},{24,G(0,6,12,18)}}},
+    /* 7/4 x2 (4+4+3+3) + 2/4 */
+    {3, {{28,G(0,8,16,22)},{28,G(0,8,16,22)},{8,G(0,4,4,4)}}},
+    /* 9/8 x3 (2+2+2+3) + 5/8 (3+2) */
+    {4, {{18,G(0,4,8,12)},{18,G(0,4,8,12)},{18,G(0,4,8,12)},{10,G(0,6,6,6)}}},
+    /* 11/8 x2 (3+3+3+2) + 10/8 (3+3+2+2) */
+    {3, {{22,G(0,6,12,18)},{22,G(0,6,12,18)},{20,G(0,6,12,16)}}}
+};
+#undef G
 #define FM(tone, role, level, rev, dly) {GROOVE_DX7, role, tone, level, rev + 16*dly}
 #define AC(tone, role, level, rev, dly) {GROOVE_303, role, tone, level, rev + 16*dly}
 #define PS(tone, role, level, rev, dly) {GROOVE_PSG, role, tone, level, rev + 16*dly}
@@ -42,24 +65,25 @@ struct scene {
  * tempo and must stay within the delay range (about bpm / 22 steps).
  * Rhythms: 0 straight, 1 driving, 2 half-time, 3 shuffle, 4 gallop,
  * 5 3+3+2, 6 four-floor, 7 stomp. Motif picks the bass figure and melody;
- * its low bit also picks the chord progression. */
+ * its low bit also picks the chord progression. The optional last field
+ * picks a mixed meter; drums, bass and chords then follow its beat groups. */
 static const struct scene scenes[GROOVE_FACTORY_PROJECTS] = {
-    {"ARENA ROCK",  124,40,0, 0,1,0,4, 60,3,30,74, {FM(TONEWHEEL,KEYS,94,3,0), FM(MOOG_BASS,BASS,94,0,0), SA(BEAT,88), FM(SYNC_LEAD,LEAD,78,3,2)}},
-    {"GALLOP PROG", 140,45,1, 0,4,3,4, 52,3,28,70, {FM(SYNTH_BRASS,STAB,88,3,0), AC(AN_SQUARE,BASS,38,0,0), SA(BEAT,88), FM(MINI_LEAD,LEAD,80,3,3)}},
-    {"CATHEDRAL",    76,36,0, 0,2,2,3, 98,3,40,90, {FM(PIPE_ORGAN,PAD,98,7,0), FM(TAURUS,BASS,92,1,0), FM(MINI_LEAD,LEAD,78,5,3)}},
-    {"RONDO PROG",  132,40,0, 0,5,5,5, 58,2,30,72, {FM(TONEWHEEL,STAB,88,2,0), AC(AN_BASS,BASS,40,0,0), SA(BEAT,86), FM(MINI_LEAD,LEAD,80,3,2), FM(HARPSICHORD,ARP,66,3,1)}},
-    {"SYMPHO POP",  120,38,0, 0,6,0,5, 70,2,30,76, {FM(STRINGS,PAD,86,5,0), FM(STAGE_EP,KEYS,96,4,0), FM(MOOG_BASS,BASS,90,0,0), SA(BEAT,86), FM(HARPSICHORD,ARP,62,3,2)}},
-    {"LUNAR DRIFT",  64,38,1, 0,2,2,5, 92,2,54,84, {FM(PROG_PAD,PAD,86,7,0), FM(STAGE_EP,KEYS,94,5,2), FM(TAURUS,BASS,92,0,0), SA(BEAT,76), FM(MINI_LEAD,LEAD,74,6,6)}},
-    {"ASTRO ORGAN", 112,40,1, 0,0,1,4, 72,3,46,78, {FM(COMBO_ORGAN,STAB,88,4,3), FM(MOOG_BASS,BASS,90,0,0), SA(BEAT,84), AC(AN_LEAD,ARP,28,3,4)}},
-    {"WURLI BOUNCE",104,43,0,30,3,4,4, 56,2,26,70, {FM(WURLI,KEYS,102,3,0), FM(MOOG_BASS,BASS,88,0,0), SA(BEAT,86), FM(TAPE_FLUTE,LEAD,78,4,2)}},
-    {"BAROQUE ROCK", 92,46,0, 0,0,2,4, 76,2,30,78, {FM(HARPSICHORD,KEYS,92,4,0), FM(TAPE_CHOIR,PAD,82,6,0), FM(TAURUS,BASS,88,0,0), SA(BEAT,86)}},
-    {"TAPE CHOIR",   70,40,1, 0,2,2,4, 90,3,44,82, {FM(TAPE_CHOIR,PAD,88,6,0), FM(TAPE_FLUTE,LEAD,82,5,2), FM(TAURUS,BASS,92,0,0), PL(1,ARP,72,5,4)}},
-    {"PROG ODYSSEY",136,42,1, 0,5,3,5, 60,3,32,72, {FM(SYNTH_BRASS,STAB,88,3,0), FM(MOOG_BASS,BASS,92,0,0), SA(BEAT,86), FM(SYNC_LEAD,LEAD,78,3,2), FM(PROG_PAD,PAD,60,5,0)}},
-    {"MINI DUEL",   128,45,1, 0,1,5,5, 58,3,30,72, {FM(MINI_LEAD,LEAD,82,3,2), AC(AN_SQUARE,BASS,38,0,0), SA(BEAT,86), FM(SYNC_LEAD,ARP,66,3,3), FM(SYNTH_BRASS,PAD,58,4,0)}},
-    {"FUSION RUN",  150,40,1,12,4,1,5, 50,3,24,66, {FM(MINI_LEAD,LEAD,82,2,1), FM(CLAV,STAB,90,2,0), AC(AN_BASS,BASS,40,0,0), SA(BEAT,88), FM(TONEWHEEL,PAD,62,3,0)}},
-    {"PEDAL POINT", 100,40,0, 0,0,2,4, 78,3,36,78, {FM(TAURUS,BASS,100,0,0), FM(PROG_PAD,PAD,76,6,0), SA(BEAT,84), FM(MINI_LEAD,LEAD,78,4,3)}},
-    {"ARP HORIZON", 116,38,1, 0,6,4,5, 88,3,52,84, {AC(AN_LEAD,ARP,30,4,4), FM(STRINGS,PAD,88,6,0), FM(TAPE_CHOIR,KEYS,70,6,2), DR(80), FM(MOOG_BASS,BASS,86,0,0)}},
-    {"SLOW BURN",    60,43,1, 0,2,4,4, 90,2,48,82, {FM(TONEWHEEL,PAD,76,6,0), FM(TAURUS,BASS,90,0,0), SA(BEAT,76), FM(MINI_LEAD,LEAD,80,6,5)}}
+    {"ARENA ROCK",  124,40,0, 0,1,0,4, 60,3,30,74, {FM(TONEWHEEL,KEYS,94,3,0), FM(MOOG_BASS,BASS,94,0,0), SA(BEAT,88), FM(SYNC_LEAD,LEAD,78,3,2)}, M44},
+    {"GALLOP PROG", 140,45,1, 0,4,3,4, 52,3,28,70, {FM(SYNTH_BRASS,STAB,88,3,0), AC(AN_SQUARE,BASS,38,0,0), SA(BEAT,88), FM(MINI_LEAD,LEAD,80,3,3)}, M44},
+    {"CATHEDRAL",    76,36,0, 0,2,2,3, 98,3,40,90, {FM(PIPE_ORGAN,PAD,98,7,0), FM(TAURUS,BASS,92,1,0), FM(MINI_LEAD,LEAD,78,5,3)}, M44},
+    {"RONDO 7/8",   132,40,0, 0,5,5,5, 58,2,30,72, {FM(TONEWHEEL,STAB,88,2,0), AC(AN_BASS,BASS,40,0,0), SA(BEAT,86), FM(MINI_LEAD,LEAD,80,3,2), FM(HARPSICHORD,ARP,66,3,1)}, M78},
+    {"SYMPHO POP",  120,38,0, 0,6,0,5, 70,2,30,76, {FM(STRINGS,PAD,86,5,0), FM(STAGE_EP,KEYS,96,4,0), FM(MOOG_BASS,BASS,90,0,0), SA(BEAT,86), FM(HARPSICHORD,ARP,62,3,2)}, M44},
+    {"LUNAR DRIFT",  64,38,1, 0,2,2,5, 92,2,54,84, {FM(PROG_PAD,PAD,86,7,0), FM(STAGE_EP,KEYS,94,5,2), FM(TAURUS,BASS,92,0,0), SA(BEAT,76), FM(MINI_LEAD,LEAD,74,6,6)}, M44},
+    {"ASTRO ORGAN", 112,40,1, 0,0,1,4, 72,3,46,78, {FM(COMBO_ORGAN,STAB,88,4,3), FM(MOOG_BASS,BASS,90,0,0), SA(BEAT,84), AC(AN_LEAD,ARP,28,3,4)}, M44},
+    {"WURLI BOUNCE",104,43,0,30,3,4,4, 56,2,26,70, {FM(WURLI,KEYS,102,3,0), FM(MOOG_BASS,BASS,88,0,0), SA(BEAT,86), FM(TAPE_FLUTE,LEAD,78,4,2)}, M44},
+    {"BAROQUE ROCK", 92,46,0, 0,0,2,4, 76,2,30,78, {FM(HARPSICHORD,KEYS,92,4,0), FM(TAPE_CHOIR,PAD,82,6,0), FM(TAURUS,BASS,88,0,0), SA(BEAT,86)}, M44},
+    {"TAPE CHOIR",   70,40,1, 0,2,2,4, 90,3,44,82, {FM(TAPE_CHOIR,PAD,88,6,0), FM(TAPE_FLUTE,LEAD,82,5,2), FM(TAURUS,BASS,92,0,0), PL(1,ARP,72,5,4)}, M44},
+    {"ODYSSEY 5/4", 136,42,1, 0,5,3,5, 60,3,32,72, {FM(SYNTH_BRASS,STAB,88,3,0), FM(MOOG_BASS,BASS,92,0,0), SA(BEAT,86), FM(SYNC_LEAD,LEAD,78,3,2), FM(PROG_PAD,PAD,60,5,0)}, M54},
+    {"DUEL 9/8",    128,45,1, 0,1,5,5, 58,3,30,72, {FM(MINI_LEAD,LEAD,82,3,2), AC(AN_SQUARE,BASS,38,0,0), SA(BEAT,86), FM(SYNC_LEAD,ARP,66,3,3), FM(SYNTH_BRASS,PAD,58,4,0)}, M98},
+    {"FUSION 11/8", 150,40,1, 0,4,1,5, 50,3,24,66, {FM(MINI_LEAD,LEAD,82,2,1), FM(CLAV,STAB,90,2,0), AC(AN_BASS,BASS,40,0,0), SA(BEAT,88), FM(TONEWHEEL,PAD,62,3,0)}, M118},
+    {"PEDAL 7/4",   100,40,0, 0,0,2,4, 78,3,36,78, {FM(TAURUS,BASS,100,0,0), FM(PROG_PAD,PAD,76,6,0), SA(BEAT,84), FM(MINI_LEAD,LEAD,78,4,3)}, M74},
+    {"ARP HORIZON", 116,38,1, 0,6,4,5, 88,3,52,84, {AC(AN_LEAD,ARP,30,4,4), FM(STRINGS,PAD,88,6,0), FM(TAPE_CHOIR,KEYS,70,6,2), DR(80), FM(MOOG_BASS,BASS,86,0,0)}, M44},
+    {"SLOW BURN",    60,43,1, 0,2,4,4, 90,2,48,82, {FM(TONEWHEEL,PAD,76,6,0), FM(TAURUS,BASS,90,0,0), SA(BEAT,76), FM(MINI_LEAD,LEAD,80,6,5)}, M44}
 };
 #undef FM
 #undef AC
@@ -296,42 +320,68 @@ int groove_factory_build(unsigned index, struct groove_project *p)
     static const uint8_t open_chords[2][8] = {{4,4,11,14},{4,3,10,14}};
     memcpy(p->sequence.chord[12], open_chords, sizeof open_chords);
     groove_project_arp_defaults(p);
+    const struct meter_shape *m = &meters[s->meter < METERS ? s->meter : M44];
+    unsigned odd = m != &meters[M44];
     for (unsigned t = 0; t < GROOVE_TRACKS; ++t) {
         const struct part empty = {GROOVE_PSG,LEAD,0,100,0};
         const struct part *v = t < s->count ? &s->part[t] : &empty;
         preset(&p->preset[t], v);
         if (t >= s->count) continue;
-        for (unsigned bar = 0; bar < 4; ++bar) {
-            unsigned root = bar_root(s, bar), minor = bar_minor(s, bar);
-            for (unsigned i = 0; i < 16; ++i) {
-                struct groove_step *n = &p->step[t][bar * 16 + i];
-                unsigned bit = 1U << i, chord = 0, gate = 7, tie = 0, pitch = root + 24;
+        for (unsigned bar = 0, first = 0; bar < m->bars; first += m->bar[bar++].steps) {
+            const struct bar_shape *shape = &m->bar[bar];
+            /* Four chords per loop; a fifth (filler) bar holds the last one. */
+            unsigned harmony = bar < 4 ? bar * 4U / (m->bars < 4 ? m->bars : 4U) : 3U;
+            unsigned root = bar_root(s, harmony), minor = bar_minor(s, harmony);
+            unsigned last = bar + 1U == m->bars, group = 0;
+            for (unsigned i = 0; i < shape->steps; ++i) {
+                struct groove_step *n = &p->step[t][first + i];
+                unsigned bit = 1U << (i & 15U), chord = 0, gate = 7, tie = 0, pitch = root + 24;
+                unsigned start = (unsigned)(shape->groups >> i) & 1U, eighth = !(i & 1U);
+                if (start && i) ++group;
                 if (v->role == BEAT || v->role == PERC) {
                     const uint16_t *b = beats[s->rhythm];
                     unsigned sample = v->source == GROOVE_SAMPLE;
-                    if (v->role == BEAT && (b[0] & bit)) n->drums |= 1U;
-                    if (b[1] & bit) n->drums |= (uint16_t)(1U << (v->role == PERC && sample ? 2 : 1));
-                    if (b[2] & bit) n->drums |= (uint16_t)(1U << (sample ? 6 : 10));
-                    if (b[3] & bit) {
+                    /* Odd meters: kick and snare alternate on group starts. */
+                    unsigned kick = odd ? start && !(group & 1U) : b[0] & bit;
+                    unsigned snare = odd ? start && (group & 1U) : b[1] & bit;
+                    unsigned closed = odd ? eighth : b[2] & bit;
+                    unsigned open = odd ? 0 : b[3] & bit;
+                    unsigned perc = odd ? i + 2U == shape->steps : b[4] & bit;
+                    if (v->role == BEAT && kick) n->drums |= 1U;
+                    if (snare) n->drums |= (uint16_t)(1U << (v->role == PERC && sample ? 2 : 1));
+                    if (closed) n->drums |= (uint16_t)(1U << (sample ? 6 : 10));
+                    if (open) {
                         n->drums &= (uint16_t)~(1U << (sample ? 6 : 10));
                         n->drums |= (uint16_t)(1U << (sample ? 7 : 9));
                     }
-                    if ((b[4] & bit) && (bar & 1U)) n->drums |= (uint16_t)(1U << (sample ? 2 : 5));
-                    if (bar == 3 && i == 15) n->drums |= (uint16_t)(1U << (sample ? 4 : 3));
-                    if (n->drums) n->velocity = (uint8_t)((n->drums & 3U) ? 100 : i % 4 == 0 ? 74 : 59 + (bar & 1U)*4);
+                    if (perc && (bar & 1U)) n->drums |= (uint16_t)(1U << (sample ? 2 : 5));
+                    if (last && i + 1U == shape->steps) n->drums |= (uint16_t)(1U << (sample ? 4 : 3));
+                    if (n->drums) n->velocity = (uint8_t)((n->drums & 3U) ? 100 : (odd ? start : i % 4 == 0) ? 74 : 59 + (bar & 1U)*4);
                     continue;
                 }
                 if (v->role == BASS) {
-                    if (!(bass_masks[s->motif] & bit)) continue;
-                    pitch = root + (i == 14 ? 12U : i == 7 || i == 11 ? 7U : 0U);
+                    if (odd) {
+                        /* Eighths only: pedal on group starts, or drive with
+                         * an octave pickup into each group. */
+                        unsigned pickup = i + 2U >= shape->steps || ((shape->groups >> (i + 2U)) & 1U);
+                        unsigned dense = s->motif == 0 || s->motif == 3 || s->motif == 4;
+                        if (!eighth || (s->motif == 2 ? !start : !(start || dense || pickup))) continue;
+                        pitch = root + (start ? (group == 2 ? 7U : 0U) : pickup ? 12U : 0U);
+                    } else {
+                        if (!(bass_masks[s->motif] & bit)) continue;
+                        pitch = root + (i == 14 ? 12U : i == 7 || i == 11 ? 7U : 0U);
+                    }
                     gate = 12;
                 } else if (v->role == KEYS || v->role == PAD || v->role == STAB) {
                     unsigned mask = v->role == STAB ? 0x0444 : v->role == KEYS ? 0x0909 : 0x0001;
-                    if (!(mask & bit)) continue;
+                    unsigned hit = !odd ? (mask & bit) != 0
+                                 : v->role == PAD ? i == 0
+                                 : v->role == KEYS ? start && !(group & 1U) : start;
+                    if (!hit) continue;
                     pitch = root + 12; chord = minor ? 2 : 1;
                     if (v->role == KEYS && v->source == GROOVE_DX7) chord = 13U + minor;
                     if (v->role == PAD) { gate = 15; tie = 1; }
-                    else if (v->role == KEYS) { gate = 12; tie = i == 0 || i == 8; }
+                    else if (v->role == KEYS) { gate = 12; tie = i == 0 || (!odd && i == 8); }
                     else gate = 9;
                 } else if (v->role == ARP) {
                     if (i & 1U) continue;
@@ -339,13 +389,13 @@ int groove_factory_build(unsigned index, struct groove_project *p)
                     pitch = root + 24 + offsets[(i / 2 + bar) % 4];
                     gate = 9;
                 } else {
-                    int degree = melodies[s->motif][i];
+                    int degree = melodies[s->motif][i & 15U];
                     if (degree < 0) continue;
                     static const uint8_t scale[2][7] = {{0,2,4,7,9,12,14},{0,3,5,7,10,12,15}};
                     pitch = root + 24 + scale[minor][degree]; gate = 11;
                 }
                 n->note = (uint8_t)pitch;
-                n->velocity = (uint8_t)(i % 4 == 0 ? 100 : i % 2 == 0 ? 88 : 76);
+                n->velocity = (uint8_t)(odd ? (start ? 100 : eighth ? 88 : 76) : i % 4 == 0 ? 100 : i % 2 == 0 ? 88 : 76);
                 n->drums = (uint16_t)(chord | (gate << 5) | (tie << 12));
             }
         }
