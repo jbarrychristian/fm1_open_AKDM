@@ -19,7 +19,7 @@ Use the workbench to update firmware, preview the instrument and manage projects
 
 The 16 built-in FM tones, the four acid-engine recipes and the 16 demo projects in [app/presets.c](app/presets.c) are revoiced for classic and progressive rock.
 
-- **FM tones:** TONEWHEEL (rotary organ), COMBO ORG, PIPE ORGAN, WURLI, STAGE EP, HARPSICHRD, FUNK CLAV, MINI LEAD, SYNC LEAD, TAURUS (bass pedals), MOOG BASS, STRINGS (string machine), TAPE FLUTE, TAPE CHOIR, SYNTHBRASS, PROG PAD, POLY VOX (Polymoog-style new wave pad).
+- **FM tones**, named in the shorthand players use for the instruments they imitate: B3 ORGAN (rotary tonewheel), COMBO FARF, PIPE ORGAN, WURLI 200A, DX7 EP, HARPSICHRD, CLAV D6, MINI LEAD, P5 SYNC, PEDAL BASS, MODEL D BS, SOLINA STR (string machine), M400 FLUTE and M400 CHOIR (tape replay), OB BRASS, J60 PAD (chorus pad), JP8 POLY. All are FM approximations on the DX7 engine; the names describe the target sound and imply no affiliation.
 - **Acid engine:** warm bass, deep pedal, singing lead and square bass.
 - **Demo projects:** ARENA ROCK, GALLOP PROG, CATHEDRAL, RONDO 7/8, SYMPHO POP, LUNAR DRIFT, ASTRO ORGAN, WURLI BOUNCE, BAROQUE ROCK, TAPE CHOIR, ODYSSEY 5/4, DUEL 9/8, FUSION 11/8, PEDAL 7/4, SEQUENCER 78 (late-70s French electronic: sixteenth sequencer, string machine, rhythm box) and COLD MACHINE (late-70s new wave: driving bass, polysynth pad, steady beat). New rhythms include straight rock, half-time, shuffle, gallop, 3+3+2 accents and stomp.
 

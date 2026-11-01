@@ -16,9 +16,9 @@
  * analog-style leads, brass and bass pedals. Scenes are style sketches, not
  * transcriptions of any recording. */
 enum { KEYS, BASS, ARP, LEAD, PAD, BEAT, PERC, STAB };
-enum { TONEWHEEL, COMBO_ORGAN, PIPE_ORGAN, WURLI, STAGE_EP, HARPSICHORD,
-       CLAV, MINI_LEAD, SYNC_LEAD, TAURUS, MOOG_BASS, STRINGS,
-       TAPE_FLUTE, TAPE_CHOIR, SYNTH_BRASS, PROG_PAD, POLY_VOX, DEMO_TONES };
+enum { B3_ORGAN, COMBO_FARF, PIPE_ORGAN, WURLI_200A, DX7_EP, HARPSICHORD,
+       CLAV_D6, MINI_LEAD, P5_SYNC, PEDAL_BASS, MODEL_D_BASS, SOLINA,
+       M400_FLUTE, M400_CHOIR, OB_BRASS, J60_PAD, JP8_POLY, DEMO_TONES };
 /* 303 recipes: warm bass, deep pedal, singing lead, square bass. */
 enum { AN_BASS, AN_PEDAL, AN_LEAD, AN_SQUARE };
 struct part {
@@ -69,22 +69,22 @@ static const struct meter_shape meters[METERS] = {
  * its low bit also picks the chord progression. The optional last field
  * picks a mixed meter; drums, bass and chords then follow its beat groups. */
 static const struct scene scenes[GROOVE_FACTORY_PROJECTS] = {
-    {"ARENA ROCK",  124,40,0, 0,1,0,4, 60,3,30,74, {FM(TONEWHEEL,KEYS,94,3,0), FM(MOOG_BASS,BASS,94,0,0), SA(BEAT,88), FM(SYNC_LEAD,LEAD,78,3,2)}, M44, 0},
-    {"GALLOP PROG", 140,45,1, 0,4,3,4, 52,3,28,70, {FM(SYNTH_BRASS,STAB,88,3,0), AC(AN_SQUARE,BASS,38,0,0), SA(BEAT,88), FM(MINI_LEAD,LEAD,80,3,3)}, M44, 0},
-    {"CATHEDRAL",    76,36,0, 0,2,2,3, 98,3,40,90, {FM(PIPE_ORGAN,PAD,98,7,0), FM(TAURUS,BASS,92,1,0), FM(MINI_LEAD,LEAD,78,5,3)}, M44, 0},
-    {"RONDO 7/8",   132,40,0, 0,5,5,5, 58,2,30,72, {FM(TONEWHEEL,STAB,88,2,0), AC(AN_BASS,BASS,40,0,0), SA(BEAT,86), FM(MINI_LEAD,LEAD,80,3,2), FM(HARPSICHORD,ARP,66,3,1)}, M78, 0},
-    {"SYMPHO POP",  120,38,0, 0,6,0,5, 70,2,30,76, {FM(STRINGS,PAD,86,5,0), FM(STAGE_EP,KEYS,96,4,0), FM(MOOG_BASS,BASS,90,0,0), SA(BEAT,86), FM(HARPSICHORD,ARP,62,3,2)}, M44, 0},
-    {"LUNAR DRIFT",  64,38,1, 0,2,2,5, 92,2,54,84, {FM(PROG_PAD,PAD,86,7,0), FM(STAGE_EP,KEYS,94,5,2), FM(TAURUS,BASS,92,0,0), SA(BEAT,76), FM(MINI_LEAD,LEAD,74,6,6)}, M44, 0},
-    {"ASTRO ORGAN", 112,40,1, 0,0,1,4, 72,3,46,78, {FM(COMBO_ORGAN,STAB,88,4,3), FM(MOOG_BASS,BASS,90,0,0), SA(BEAT,84), AC(AN_LEAD,ARP,28,3,4)}, M44, 0},
-    {"WURLI BOUNCE",104,43,0,30,3,4,4, 56,2,26,70, {FM(WURLI,KEYS,102,3,0), FM(MOOG_BASS,BASS,88,0,0), SA(BEAT,86), FM(TAPE_FLUTE,LEAD,78,4,2)}, M44, 0},
-    {"BAROQUE ROCK", 92,46,0, 0,0,2,4, 76,2,30,78, {FM(HARPSICHORD,KEYS,92,4,0), FM(TAPE_CHOIR,PAD,82,6,0), FM(TAURUS,BASS,88,0,0), SA(BEAT,86)}, M44, 0},
-    {"TAPE CHOIR",   70,40,1, 0,2,2,4, 90,3,44,82, {FM(TAPE_CHOIR,PAD,88,6,0), FM(TAPE_FLUTE,LEAD,82,5,2), FM(TAURUS,BASS,92,0,0), PL(1,ARP,72,5,4)}, M44, 0},
-    {"ODYSSEY 5/4", 136,42,1, 0,5,3,5, 60,3,32,72, {FM(SYNTH_BRASS,STAB,88,3,0), FM(MOOG_BASS,BASS,92,0,0), SA(BEAT,86), FM(SYNC_LEAD,LEAD,78,3,2), FM(PROG_PAD,PAD,60,5,0)}, M54, 0},
-    {"DUEL 9/8",    128,45,1, 0,1,5,5, 58,3,30,72, {FM(MINI_LEAD,LEAD,82,3,2), AC(AN_SQUARE,BASS,38,0,0), SA(BEAT,86), FM(SYNC_LEAD,ARP,66,3,3), FM(SYNTH_BRASS,PAD,58,4,0)}, M98, 0},
-    {"FUSION 11/8", 150,40,1, 0,4,1,5, 50,3,24,66, {FM(MINI_LEAD,LEAD,82,2,1), FM(CLAV,STAB,90,2,0), AC(AN_BASS,BASS,40,0,0), SA(BEAT,88), FM(TONEWHEEL,PAD,62,3,0)}, M118, 0},
-    {"PEDAL 7/4",   100,40,0, 0,0,2,4, 78,3,36,78, {FM(TAURUS,BASS,100,0,0), FM(PROG_PAD,PAD,76,6,0), SA(BEAT,84), FM(MINI_LEAD,LEAD,78,4,3)}, M74, 0},
-    {"SEQUENCER 78",118,40,1, 0,8,0,5, 86,3,46,82, {AC(AN_LEAD,ARP,30,3,3), FM(STRINGS,PAD,90,6,0), FM(SYNC_LEAD,LEAD,74,5,3), DR(82), FM(MOOG_BASS,BASS,84,0,0)}, M44, 1},
-    {"COLD MACHINE",126,41,1, 0,9,0,4, 52,2,30,70, {FM(MOOG_BASS,BASS,96,0,0), FM(POLY_VOX,PAD,80,4,0), SA(BEAT,90), FM(MINI_LEAD,LEAD,72,3,2)}, M44, 0}
+    {"ARENA ROCK",  124,40,0, 0,1,0,4, 60,3,30,74, {FM(B3_ORGAN,KEYS,94,3,0), FM(MODEL_D_BASS,BASS,94,0,0), SA(BEAT,88), FM(P5_SYNC,LEAD,78,3,2)}, M44, 0},
+    {"GALLOP PROG", 140,45,1, 0,4,3,4, 52,3,28,70, {FM(OB_BRASS,STAB,88,3,0), AC(AN_SQUARE,BASS,38,0,0), SA(BEAT,88), FM(MINI_LEAD,LEAD,80,3,3)}, M44, 0},
+    {"CATHEDRAL",    76,36,0, 0,2,2,3, 98,3,40,90, {FM(PIPE_ORGAN,PAD,98,7,0), FM(PEDAL_BASS,BASS,92,1,0), FM(MINI_LEAD,LEAD,78,5,3)}, M44, 0},
+    {"RONDO 7/8",   132,40,0, 0,5,5,5, 58,2,30,72, {FM(B3_ORGAN,STAB,88,2,0), AC(AN_BASS,BASS,40,0,0), SA(BEAT,86), FM(MINI_LEAD,LEAD,80,3,2), FM(HARPSICHORD,ARP,66,3,1)}, M78, 0},
+    {"SYMPHO POP",  120,38,0, 0,6,0,5, 70,2,30,76, {FM(SOLINA,PAD,86,5,0), FM(DX7_EP,KEYS,96,4,0), FM(MODEL_D_BASS,BASS,90,0,0), SA(BEAT,86), FM(HARPSICHORD,ARP,62,3,2)}, M44, 0},
+    {"LUNAR DRIFT",  64,38,1, 0,2,2,5, 92,2,54,84, {FM(J60_PAD,PAD,86,7,0), FM(DX7_EP,KEYS,94,5,2), FM(PEDAL_BASS,BASS,92,0,0), SA(BEAT,76), FM(MINI_LEAD,LEAD,74,6,6)}, M44, 0},
+    {"ASTRO ORGAN", 112,40,1, 0,0,1,4, 72,3,46,78, {FM(COMBO_FARF,STAB,88,4,3), FM(MODEL_D_BASS,BASS,90,0,0), SA(BEAT,84), AC(AN_LEAD,ARP,28,3,4)}, M44, 0},
+    {"WURLI BOUNCE",104,43,0,30,3,4,4, 56,2,26,70, {FM(WURLI_200A,KEYS,102,3,0), FM(MODEL_D_BASS,BASS,88,0,0), SA(BEAT,86), FM(M400_FLUTE,LEAD,78,4,2)}, M44, 0},
+    {"BAROQUE ROCK", 92,46,0, 0,0,2,4, 76,2,30,78, {FM(HARPSICHORD,KEYS,92,4,0), FM(M400_CHOIR,PAD,82,6,0), FM(PEDAL_BASS,BASS,88,0,0), SA(BEAT,86)}, M44, 0},
+    {"TAPE CHOIR",   70,40,1, 0,2,2,4, 90,3,44,82, {FM(M400_CHOIR,PAD,88,6,0), FM(M400_FLUTE,LEAD,82,5,2), FM(PEDAL_BASS,BASS,92,0,0), PL(1,ARP,72,5,4)}, M44, 0},
+    {"ODYSSEY 5/4", 136,42,1, 0,5,3,5, 60,3,32,72, {FM(OB_BRASS,STAB,88,3,0), FM(MODEL_D_BASS,BASS,92,0,0), SA(BEAT,86), FM(P5_SYNC,LEAD,78,3,2), FM(J60_PAD,PAD,60,5,0)}, M54, 0},
+    {"DUEL 9/8",    128,45,1, 0,1,5,5, 58,3,30,72, {FM(MINI_LEAD,LEAD,82,3,2), AC(AN_SQUARE,BASS,38,0,0), SA(BEAT,86), FM(P5_SYNC,ARP,66,3,3), FM(OB_BRASS,PAD,58,4,0)}, M98, 0},
+    {"FUSION 11/8", 150,40,1, 0,4,1,5, 50,3,24,66, {FM(MINI_LEAD,LEAD,82,2,1), FM(CLAV_D6,STAB,90,2,0), AC(AN_BASS,BASS,40,0,0), SA(BEAT,88), FM(B3_ORGAN,PAD,62,3,0)}, M118, 0},
+    {"PEDAL 7/4",   100,40,0, 0,0,2,4, 78,3,36,78, {FM(PEDAL_BASS,BASS,100,0,0), FM(J60_PAD,PAD,76,6,0), SA(BEAT,84), FM(MINI_LEAD,LEAD,78,4,3)}, M74, 0},
+    {"SEQUENCER 78",118,40,1, 0,8,0,5, 86,3,46,82, {AC(AN_LEAD,ARP,30,3,3), FM(SOLINA,PAD,90,6,0), FM(P5_SYNC,LEAD,74,5,3), DR(82), FM(MODEL_D_BASS,BASS,84,0,0)}, M44, 1},
+    {"COLD MACHINE",126,41,1, 0,9,0,4, 52,2,30,70, {FM(MODEL_D_BASS,BASS,96,0,0), FM(JP8_POLY,PAD,80,4,0), SA(BEAT,90), FM(MINI_LEAD,LEAD,72,3,2)}, M44, 0}
 };
 #undef FM
 #undef AC
@@ -127,9 +127,9 @@ static unsigned bar_minor(const struct scene *s, unsigned bar)
     return quality[s->minor + 2*(s->motif & 1U)][bar];
 }
 static FM1_DSP_DATA const char fm_names[DEMO_TONES][11] = {
-    "TONEWHEEL ","COMBO ORG ","PIPE ORGAN","WURLI     ","STAGE EP  ","HARPSICHRD",
-    "FUNK CLAV ","MINI LEAD ","SYNC LEAD ","TAURUS    ","MOOG BASS ","STRINGS   ",
-    "TAPE FLUTE","TAPE CHOIR","SYNTHBRASS","PROG PAD  ","POLY VOX  "
+    "B3 ORGAN  ","COMBO FARF","PIPE ORGAN","WURLI 200A","DX7 EP    ","HARPSICHRD",
+    "CLAV D6   ","MINI LEAD ","P5 SYNC   ","PEDAL BASS","MODEL D BS","SOLINA STR",
+    "M400 FLUTE","M400 CHOIR","OB BRASS  ","J60 PAD   ","JP8 POLY  "
 };
 /* Three independently voiced operator pairs (DX7 algorithm 5): body, colour
  * and transient. Pair 0's modulator carries the feedback. Organs replace
@@ -146,33 +146,33 @@ static FM1_DSP_DATA const struct fm_voice voices[DEMO_TONES] = {
     {99,60,45,80,99,99,99,80,0, {{0},{0},{0}}},
     {99,60,45,82,99,99,99,82,0, {{0},{0},{0}}},
     {78,50,40,58,99,99,78,58,0, {{0},{0},{0}}},
-    /* WURLI: reedy bark that softens as the note decays. */
+    /* WURLI_200A 200A: reedy bark that softens as the note decays. */
     {99,40,30,66,90,0,99,70,1, {{99,1,7,64,1,0,68,42},{82,1,8,50,1,0,60,30},{68,2,7,40,3,0,80,0}}},
-    /* STAGE EP: round body with a bright, fast tine. */
+    /* DX7 EP: round body with a bright, fast tine. */
     {99,45,26,62,88,0,99,66,0, {{99,1,7,42,1,0,62,30},{86,1,8,36,1,0,66,20},{72,1,6,60,14,0,90,0}}},
     /* HARPSICHRD: 8' and 4' plucked registers. */
     {99,58,40,74,72,0,99,80,2, {{97,1,7,74,1,0,70,40},{86,2,8,66,3,0,72,30},{70,3,6,58,5,0,80,0}}},
-    /* FUNK CLAV */
+    /* CLAV_D6 D6 */
     {99,75,47,82,60,0,99,84,2, {{99,1,7,70,1,0,82,24},{90,2,7,58,2,0,86,0},{78,2,7,50,3,0,88,0}}},
     /* MINI LEAD: two detuned saws and a square sub, gentle filter fall. */
     {99,60,50,70,99,95,99,75,6, {{99,1,7,80,1,0,55,82},{90,1,9,74,1,0,55,80},{70,0,5,60,1,0,60,74}}},
-    /* SYNC LEAD: bright partials that sweep down like a synced oscillator. */
+    /* P5 SYNC: bright partials that sweep down like a synced oscillator. */
     {99,50,40,68,99,92,74,70,5, {{99,1,7,84,2,0,40,62},{82,1,9,76,3,0,38,58},{62,1,5,56,1,0,50,70}}},
-    /* TAURUS: deep sustaining bass pedal. */
+    /* PEDAL BASS: deep sustaining bass pedal. */
     {94,55,40,62,99,95,99,74,3, {{99,1,7,62,1,0,45,46},{90,0,8,42,1,0,50,30},{74,1,6,0,1,0,80,0}}},
-    /* MOOG BASS: punchy filter envelope. */
+    /* MODEL D BS: punchy filter envelope. */
     {99,62,46,78,95,86,99,82,5, {{99,1,7,76,1,0,62,42},{86,1,8,64,1,0,66,30},{74,0,7,42,1,0,70,20}}},
-    /* STRINGS: string machine ensemble, slow attack. */
+    /* SOLINA STR: string machine ensemble, slow attack. */
     {58,45,38,52,97,94,55,54,2, {{93,1,4,58,1,0,52,80},{89,1,10,56,1,0,52,78},{74,2,7,40,1,0,52,70}}},
-    /* TAPE FLUTE: breathy sine with a little tape wow. */
+    /* M400 FLUTE: breathy sine with a little tape wow. */
     {72,50,40,58,96,92,82,60,7, {{99,1,7,38,1,0,50,30},{72,2,8,20,1,0,50,12},{50,1,6,0,1,0,50,0}}},
-    /* TAPE CHOIR: soft vowel built from low-index partials. */
+    /* M400 CHOIR: soft vowel built from low-index partials. */
     {55,40,35,52,95,93,55,52,0, {{94,1,6,32,1,0,50,30},{84,2,8,30,1,0,50,26},{68,3,7,34,1,0,50,30}}},
-    /* SYNTHBRASS: brightness swells after the attack. */
-    {90,55,45,66,99,92,62,64,4, {{99,1,6,78,1,0,55,74},{93,1,9,72,1,0,55,70},{72,0,7,50,1,0,58,60}}},
-    /* PROG PAD: slow, detuned and evolving. */
-    {45,40,32,44,96,92,40,46,1, {{91,1,5,52,1,0,40,70},{87,1,9,48,2,0,40,60},{72,0,7,40,1,0,40,55}}},
-    /* POLY VOX: bright, nasal polysynth ensemble (late-70s new wave). */
+    /* OB BRASS: brightness swells after the attack. */
+    {92,55,45,66,99,92,66,64,5, {{99,1,6,82,1,0,55,76},{93,1,9,76,1,0,55,72},{72,0,7,52,1,0,58,62}}},
+    /* J60 PAD: slow, detuned, with a slow ensemble chorus. */
+    {45,40,32,44,96,92,40,46,1, {{91,1,3,52,1,0,40,70},{87,1,11,48,2,0,40,60},{72,0,7,40,1,0,40,55}}},
+    /* JP8 POLY: bright, buzzy polysynth ensemble. */
     {86,50,40,60,99,95,86,60,5, {{96,1,3,80,1,0,60,86},{92,1,11,78,1,0,60,84},{76,2,7,64,1,0,60,78}}}
 };
 /* LFO per tone: speed, delay, pitch depth, amp depth, wave (0 triangle,
@@ -195,7 +195,7 @@ static const struct fm_lfo lfos[DEMO_TONES] = {
     { 7, 0, 6, 0,0,2,0}, /* tape wow */
     { 8, 0, 6, 4,0,2,1},
     {33,60, 8, 0,4,2,0},
-    {20, 0, 6, 0,0,2,0},
+    { 4, 0,12, 0,0,3,0}, /* slow chorus, about 0.7 Hz */
     {38, 0, 8, 0,0,3,0}  /* ensemble */
 };
 /* Drawbars for the three organs: coarse ratio (0 = 0.5), fine, level, and
@@ -237,7 +237,7 @@ static void demo_voice(uint8_t p[156], unsigned tone)
             v[19] = o->fine[op]; v[20] = o->detune[op];
             v[0] = sound->attack; v[1] = sound->decay; v[3] = sound->release;
             /* Tonewheel percussion: the 2 2/3' drawbar fades to a lower level. */
-            if (tone == TONEWHEEL && op == 4) { v[1] = 62; v[5] = v[6] = 70; }
+            if (tone == B3_ORGAN && op == 4) { v[1] = 62; v[5] = v[6] = 70; }
         }
     }
     for (unsigned i = 126; i < 130; ++i) p[i] = 99;
