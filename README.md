@@ -15,6 +15,16 @@ Use the workbench to update firmware, preview the instrument and manage projects
 - **Step recording:** with the track set to NORMAL, press REC while stopped and play notes. Releasing all played keys advances to the next step, including DRUM 808 and SAMPLER. Overlapping notes share a step; during playback, REC records in time. PLAY tracks are for live performance and do not record notes.
 - **Tempo and delay:** internal tempo is 30–300 BPM. Tap Tempo is available on the workbench, with SEQ on the FX DELAY page, or with HOME held while tapping SEQ elsewhere. Delay supports tempo synchronization and fixed times of about 30–2040 ms.
 
+## Classic and progressive rock bank (this fork)
+
+The 16 built-in FM tones, the four acid-engine recipes and the 16 demo projects in [app/presets.c](app/presets.c) are revoiced for classic and progressive rock.
+
+- **FM tones:** TONEWHEEL (rotary organ), COMBO ORG, PIPE ORGAN, WURLI, STAGE EP, HARPSICHRD, FUNK CLAV, MINI LEAD, SYNC LEAD, TAURUS (bass pedals), MOOG BASS, STRINGS (string machine), TAPE FLUTE, TAPE CHOIR, SYNTHBRASS, PROG PAD.
+- **Acid engine:** warm bass, deep pedal, singing lead and square bass.
+- **Demo projects:** ARENA ROCK, GALLOP PROG, CATHEDRAL, RONDO PROG, SYMPHO POP, LUNAR DRIFT, ASTRO ORGAN, WURLI BOUNCE, BAROQUE ROCK, TAPE CHOIR, PROG ODYSSEY, MINI DUEL, FUSION RUN, PEDAL POINT, ARP HORIZON, SLOW BURN. New rhythms include straight rock, half-time, shuffle, gallop, 3+3+2 accents and stomp.
+
+These are style sketches, not transcriptions of any recording. The 128-voice DX7 library is unchanged.
+
 ## MIDI
 
 FM1 accepts DIN, USB and BLE MIDI input, with USB/BLE output. Default input channels 1–7 address tracks 1–7; channel 10 addresses track 8. Change each input channel on TRACK ROLE.
