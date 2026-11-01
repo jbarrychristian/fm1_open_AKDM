@@ -107,7 +107,7 @@ if (!$LocalPreview -and (![Uri]::TryCreate($SourceUrl, [UriKind]::Absolute, [ref
     $sourceUri.Scheme -cne 'https' -or $sourceUri.UserInfo -or $SourceUrl -match '[\r\n]')) {
     throw 'FM1_SOURCE_URL must be an HTTPS source URL without credentials.'
 }
-$versionMatch = [regex]::Match([IO.File]::ReadAllText((Join-Path $root 'app/version.h')), '(?m)^#define FM1_RELEASE_VERSION "(V(?:0[1-9]|[1-9][0-9]{1,2}))"\s*$')
+$versionMatch = [regex]::Match([IO.File]::ReadAllText((Join-Path $root 'app/version.h')), '(?m)^#define FM1_RELEASE_VERSION "(V[1-9][0-9]{0,2})"\s*$')
 if (!$versionMatch.Success) { throw 'Set FM1_RELEASE_VERSION in app/version.h.' }
 $releaseVersion = $versionMatch.Groups[1].Value
 $notices = @("APP: GPLv3 with the FM1 SDK linking exception; no warranty. SDK and firmware resources have separate redistribution terms in THIRD_PARTY.md. Source: $SourceUrl")

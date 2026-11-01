@@ -4,15 +4,69 @@
 #include "version.h"
 #include "fm1_engine_control.h"
 #include <string.h>
-enum {
-    BACK = 0x0000,
-    PANEL = 0x18e3,
-    TEXT = 0xef5d,
-    ACCENT = 0x07ff,
-    DIM = 0x738e,
-    GREEN = 0x07e0,
-    AMBER = 0xfd20
+/* Panel themes. Each one borrows the colours of a classic instrument: the
+ * screen palette, eight track colours, an optional stripe along the top edge
+ * (like a row of coloured panel buttons) and optional wooden end cheeks.
+ * Names nod to the instruments without using their trademarks. */
+#define RGB(r, g, b) ((uint16_t)((((r) & 0xf8) << 8) | (((g) & 0xfc) << 3) | ((b) >> 3)))
+struct theme {
+    const char *name;
+    uint16_t back, panel, text, accent, dim, green, amber;
+    uint16_t track[8], stripe[4], wood[2];
 };
+static const struct theme themes[GROOVE_THEMES] = {
+    /* The original FM1 screen. */
+    {"FM1", 0x0000, 0x18e3, 0xef5d, 0x07ff, 0x738e, 0x07e0, 0xfd20,
+     {0x3c9f, 0x07bf, 0x4eae, 0x06d4, 0xac9f, 0xed18, 0xff06, 0xfba5}, {0}, {0}},
+    /* Jupiter-style: black panel, rows of red, orange and yellow buttons. */
+    {"JOVE 8", RGB(18,18,20), RGB(52,50,48), RGB(240,236,226), RGB(255,138,20),
+     RGB(120,116,108), RGB(255,200,40), RGB(232,56,40),
+     {RGB(255,138,20), RGB(255,200,40), RGB(232,56,40), RGB(240,230,200),
+      RGB(255,170,80), RGB(250,220,110), RGB(240,100,80), RGB(200,196,186)},
+     {RGB(232,56,40), RGB(255,138,20), RGB(255,200,40), RGB(240,236,226)}, {0}},
+    /* Juno-style: slate panel, cream legends, red and mustard accents. */
+    {"JUNE 60", RGB(30,32,38), RGB(62,66,76), RGB(236,230,214), RGB(232,74,52),
+     RGB(120,124,132), RGB(120,200,170), RGB(240,170,50),
+     {RGB(232,74,52), RGB(240,170,50), RGB(236,230,214), RGB(120,170,220),
+      RGB(240,120,90), RGB(250,200,110), RGB(170,200,230), RGB(200,190,170)},
+     {RGB(232,74,52), RGB(240,170,50), RGB(236,230,214), RGB(120,170,220)}, {0}},
+    /* Model D-style: black panel, white legends, orange and blue rockers,
+     * walnut cheeks. */
+    {"WALNUT D", RGB(10,10,10), RGB(48,44,40), RGB(245,245,240), RGB(255,140,26),
+     RGB(128,124,118), RGB(90,150,230), RGB(255,190,60),
+     {RGB(255,140,26), RGB(90,150,230), RGB(245,245,240), RGB(255,190,60),
+      RGB(255,170,90), RGB(140,185,240), RGB(220,220,210), RGB(250,120,60)},
+     {0}, {RGB(120,72,38), RGB(84,48,24)}},
+    /* OB-style: black panel with silver and blue trim. */
+    {"OBELISK", RGB(6,8,12), RGB(40,48,64), RGB(230,234,240), RGB(70,140,255),
+     RGB(110,120,136), RGB(120,220,255), RGB(255,200,90),
+     {RGB(70,140,255), RGB(120,220,255), RGB(200,210,225), RGB(150,170,255),
+      RGB(90,190,230), RGB(255,200,90), RGB(170,200,255), RGB(230,234,240)},
+     {RGB(180,186,196), RGB(70,140,255), RGB(180,186,196), RGB(70,140,255)}, {0}},
+    /* Prophet-style: black panel, cream legends, red and gold, oak cheeks. */
+    {"ORACLE 5", RGB(14,12,10), RGB(56,48,40), RGB(238,226,200), RGB(220,60,50),
+     RGB(130,120,104), RGB(110,200,120), RGB(240,170,60),
+     {RGB(240,170,60), RGB(220,60,50), RGB(238,226,200), RGB(110,200,120),
+      RGB(250,200,120), RGB(240,110,90), RGB(200,190,160), RGB(150,210,200)},
+     {0}, {RGB(170,108,58), RGB(130,78,38)}},
+    /* Six-operator FM-style: brown panel, beige legends, green and maroon
+     * membrane buttons, green display. */
+    {"SIX OPS", RGB(36,24,22), RGB(74,52,46), RGB(232,222,200), RGB(150,210,90),
+     RGB(140,120,108), RGB(90,190,130), RGB(230,150,70),
+     {RGB(150,210,90), RGB(90,190,130), RGB(232,222,200), RGB(200,90,110),
+      RGB(230,150,70), RGB(170,230,140), RGB(220,180,150), RGB(120,200,180)},
+     {RGB(200,90,110), RGB(90,190,130), RGB(232,222,200), RGB(150,210,90)}, {0}}
+};
+#undef RGB
+static const struct theme *theme = &themes[0];
+#define BACK (theme->back)
+#define PANEL (theme->panel)
+#define TEXT (theme->text)
+#define ACCENT (theme->accent)
+#define DIM (theme->dim)
+#define GREEN (theme->green)
+#define AMBER (theme->amber)
+#define colors (theme->track)
 /* Five columns per glyph, bit 0 at the top. Digits followed by uppercase. */
 static const uint8_t font[36][5] = {
     {0x3e, 0x51, 0x49, 0x45, 0x3e}, {0, 0x42, 0x7f, 0x40, 0},       {0x42, 0x61, 0x51, 0x49, 0x46},
@@ -62,6 +116,22 @@ static __attribute__((noinline)) void paint_fill(unsigned x, unsigned y, unsigne
     for (unsigned row = first; row < end; ++row)
         for (unsigned col = x; col < right; ++col)
             paint_pixels[(row - paint_top) * (paint_end - paint_x) + col - paint_x] = color;
+}
+/* Theme trim is composed over every finished band, so pages never erase it:
+ * a three-pixel stripe along the top and three-pixel wooden cheeks. */
+static void paint_trim(void)
+{
+    const uint16_t *stripe = theme->stripe, *wood = theme->wood;
+    if (!stripe[0] && !wood[0]) return;
+    unsigned width = paint_end - paint_x;
+    for (unsigned row = paint_top; row < paint_top + PAINT_ROWS; ++row)
+        for (unsigned col = paint_x; col < paint_end; ++col) {
+            uint16_t *pixel = &paint_pixels[(row - paint_top) * width + col - paint_x];
+            if (wood[0] && (col < 3 || col >= FM1_SCREEN_WIDTH - 3))
+                *pixel = wood[(row * 5U + col * 7U) % 13U < 4U];
+            else if (stripe[0] && row < 3)
+                *pixel = stripe[col * 4U / FM1_SCREEN_WIDTH];
+        }
 }
 static const uint8_t punctuation[][6] = {
     {45,8,8,8,8,8}, {47,0x60,0x18,6,1,0}, {43,8,8,0x3e,8,8},
@@ -126,7 +196,6 @@ static void text(unsigned x, unsigned y, const char *s, unsigned scale, uint16_t
 enum { OVERVIEW, STEPS, FM_EDIT, FM_ENV, FM_LFO, TONE_EDIT, MIX, BLE, PROJECT, NAME, EFFECTS, SOURCE, ACTIONS, STEP_EDIT, RHYTHM, FM_QUICK, PRESET_BROWSER, ARP_EDIT, STARTUP };
 enum { OCT_DOWN, OCT_UP, FX, SCL, ENV, LFO, EDIT, GLO, HOME, SAVE, ARP, SEQ, PLAY, REC };
 #define BUTTON(b) (1U << (b))
-static const uint16_t colors[8] = {0x3c9f, 0x07bf, 0x4eae, 0x06d4, 0xac9f, 0xed18, 0xff06, 0xfba5};
 static const uint8_t white_keys[16] = {0, 2, 4, 6, 7, 9, 11, 12, 14, 16, 18, 19, 21, 23, 24, 26};
 /* FM1 EDIT key IDs 15,17,19,22,24,27,29,31,34,36 minus 14. */
 static const uint8_t edit_keys[10] = {1, 3, 5, 8, 10, 13, 15, 17, 20, 22};
@@ -150,7 +219,7 @@ static const char *const source_names[] = {"DX7 FM", "BASS 303", "DRUM 808", "PS
 static const char *const actions[] = {"STEP DETAILS", "RHYTHM / RECORD", "COPY STEP", "COPY PAGE", "COPY TRACK",
     "PASTE STEP", "PASTE PAGE", "PASTE TRACK", "CLEAR STEP", "CLEAR PAGE", "CLEAR TRACK",
     "REPEAT TO 32", "REPEAT TO 48", "REPEAT TO 64", "UNDO / REDO", "COPY TIMBRE", "PASTE TIMBRE",
-    "DX7 PATCH NAME", "BLUETOOTH / CLOCK", "STOP ALL / REWIND"};
+    "DX7 PATCH NAME", "BT / CLOCK / THEME", "STOP ALL / REWIND"};
 enum { ACTION_COUNT = sizeof actions / sizeof actions[0] };
 static unsigned source_preview, action, action_confirm, tone_clip_ready;
 static struct groove_preset tone_clip;
@@ -506,7 +575,7 @@ static __attribute__((noinline)) void overview(const struct groove_view v[8])
         cache->title_cache = title;
         paint_fill(0, 32, 240, 13, BACK);
         text(8, 35, project_name, 1, ACCENT, BACK);
-        text(86, 35, "OPEN " FM1_RELEASE_VERSION, 1, DIM, BACK);
+        text(86, 35, "AKDM " FM1_RELEASE_VERSION, 1, DIM, BACK);
         text(146, 35, step_follow ? "PAGE" : "STEP", 1, DIM, BACK);
         number(178, 35, step_follow ? first + 1 : cursor + 1, 2, 1, TEXT, BACK);
         text(190, 35, step_follow ? "-" : "/", 1, DIM, BACK);
@@ -987,18 +1056,20 @@ static __attribute__((noinline)) void draw_ble(const struct fm1_ble_status *stat
     }
     radio_line(0, 39, state, on ? GREEN : DIM);
     if (!ble_view) {
-        static const char *const labels[] = {"K1 BLUETOOTH", "K2 BT AUDIO", "K3 BLE ROLE", "K4 CLOCK"};
-        unsigned values[] = {on, (frame_radio_flags & GROOVE_RADIO_AUDIO) != 0, midi, groove_clock_mode()};
+        static const char *const labels[] = {"K1 BLUETOOTH", "K2 BT AUDIO", "K3 BLE ROLE", "K4 CLOCK", "SEL THEME"};
+        unsigned values[] = {on, (frame_radio_flags & GROOVE_RADIO_AUDIO) != 0, midi, groove_clock_mode(),
+            groove_screen_theme()};
         const char *const names[] = {on ? "ON" : "OFF", values[1] ? "ON" : "OFF",
-            midi == 2 ? "HOST" : midi == 1 ? "DEVICE" : "OFF", values[3] ? "MIDI" : "INT"};
-        for (unsigned i = 0; i < 4; ++i) {
+            midi == 2 ? "HOST" : midi == 1 ? "DEVICE" : "OFF", values[3] ? "MIDI" : "INT",
+            theme->name};
+        for (unsigned i = 0; i < 5; ++i) {
             uint32_t sig = values[i] | (on << 8);
             if (cache->row_cache[i] == sig) continue;
             cache->row_cache[i] = sig;
-            unsigned y = 61 + i * 30;
+            unsigned y = 59 + i * 24;
             paint_fill(8, y, 224, 20, BACK);
             text(8, y + 4, labels[i], 1, TEXT, BACK);
-            text(146, y, names[i], 2, i && i < 3 && !on ? DIM : ACCENT, BACK);
+            text(i == 4 ? 134 : 146, y, names[i], 2, i && i < 3 && !on ? DIM : ACCENT, BACK);
         }
         const char *audio = !on || !values[1] ? "AUDIO OFF" : frame_radio.audio_playing ? "AUDIO PLAYING"
             : frame_radio.audio_connected ? "AUDIO CONNECTED" : "AUDIO WAITING FOR CONNECTION";
@@ -1339,8 +1410,7 @@ static __attribute__((noinline, cold, minsize)) void boot_draw(void)
 {
     if (cache->title_cache != 0) {
         cache->title_cache = 0;
-        text(86, 48, "FM1", 4, TEXT, BACK);
-        text(81, 98, "OFFICIAL OPEN", 1, ACCENT, BACK);
+        text(24, 48, "FM1-AKDM", 4, TEXT, BACK);
         text((240 - 12 * (sizeof FM1_RELEASE_VERSION - 1)) / 2, 120,
              FM1_RELEASE_VERSION, 2, TEXT, BACK);
         text(102, 208, "M-VAVE", 1, DIM, BACK);
@@ -1673,6 +1743,7 @@ static void paint_flush(void)
         paint_end = left + width;
         memset(cache, 0xff, sizeof *cache);
         draw_page(&frame_ble);
+        paint_trim();
         /* Rasterize directly into the tightly packed DMA rectangle. */
         if (fm1_screen_submit(left, paint_top, width, PAINT_ROWS,
                             paint_pixels, width * PAINT_ROWS)) {
@@ -2220,6 +2291,8 @@ static int apply_controls(const struct fm1_controls *controls, uint32_t now,
                 ble_result = groove_settings_radio(flags, role);
             if (controls->encoders[5])
                 groove_settings_clock(controls->encoders[5] > 0 ? GROOVE_CLOCK_MIDI : GROOVE_CLOCK_INTERNAL);
+            if (controls->encoders[0])
+                groove_settings_theme(controls->encoders[0]);
             if (pressed & BUTTON(SAVE)) {
                 if (ble_action) {
                     if (ble_forget != 1) ble_forget = 1;
@@ -2971,4 +3044,16 @@ static void algorithm_draw(unsigned algorithm, unsigned muted)
         paint_fill(x, y, 22, 12, bg);
         number(x + 8, y + 3, i + 1, 1, 1, muted & (1U << i) ? DIM : BACK, bg);
     }
+}
+
+unsigned groove_screen_theme(void) { return (unsigned)(theme - themes); }
+const char *groove_screen_theme_name(unsigned index)
+{
+    return index < GROOVE_THEMES ? themes[index].name : NULL;
+}
+void groove_screen_theme_set(unsigned index)
+{
+    if (index >= GROOVE_THEMES || theme == &themes[index]) return;
+    theme = &themes[index];
+    saved_cache.shown_page = ~0U; /* Repaint everything in the new colours. */
 }

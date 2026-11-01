@@ -229,6 +229,13 @@ int groove_project_import(const uint8_t *bytes, unsigned length);
 int groove_project_export(uint8_t *bytes, unsigned capacity);
 /* Read-only factory projects. Building only writes the caller's
  * snapshot; loading changes RAM and supports undo, never writes user slots. */
+/* Screen themes are a device preference stored with the session settings.
+ * set repaints the whole screen; groove_settings_theme steps and saves it. */
+enum { GROOVE_THEMES = 7 };
+unsigned groove_screen_theme(void);
+void groove_screen_theme_set(unsigned theme);
+const char *groove_screen_theme_name(unsigned theme);
+int groove_settings_theme(int delta);
 enum { GROOVE_FACTORY_PROJECTS = 16 };
 const char *groove_factory_name(unsigned index);
 int groove_factory_build(unsigned index, struct groove_project *project);
