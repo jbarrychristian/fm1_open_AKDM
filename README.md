@@ -1,4 +1,4 @@
-# FM1 Open V14
+# FM1-AKDM V14
 
 English · [简体中文](README.zh-CN.md)
 

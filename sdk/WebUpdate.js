@@ -294,7 +294,7 @@
           this.mode='migration';return {identity:this.identity,migration:true};
         }
         // Stock V15 exposes the vendor identity and request-driven updater,
-        // but has no Official Open capability command. Recognition is not an
+        // but has no FM1-AKDM capability command. Recognition is not an
         // update: entering this route still requires explicit force approval.
         if(force && this.identity==='FM-1_015') {
           this.mode='legacy';return {identity:this.identity,legacy:true};

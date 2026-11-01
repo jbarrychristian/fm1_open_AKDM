@@ -292,7 +292,7 @@ $releaseVersion = $versionMatch.Groups[1].Value
 $productMatch = [regex]::Match([IO.File]::ReadAllText((Join-Path $root 'app/version.h')), '(?m)^#define FM1_UPDATE_PRODUCT "(FM-1_8[0-9]{6})"\s*$')
 if (!$productMatch.Success) { throw 'Set a compatible FM1_UPDATE_PRODUCT in app/version.h.' }
 $firmwareProduct = $productMatch.Groups[1].Value
-Write-Host "Build FM1 Official Open $releaseVersion"
+Write-Host "Build FM1-AKDM $releaseVersion"
 if (!$Toolchain) { $Toolchain = Join-Path $sdk 'tools' }
 $Toolchain = [IO.Path]::GetFullPath($Toolchain)
 if (Test-Path -LiteralPath (Join-Path $Toolchain 'clang.exe')) { $Toolchain = Split-Path -Parent $Toolchain }

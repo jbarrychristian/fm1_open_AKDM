@@ -1339,8 +1339,7 @@ static __attribute__((noinline, cold, minsize)) void boot_draw(void)
 {
     if (cache->title_cache != 0) {
         cache->title_cache = 0;
-        text(86, 48, "FM1", 4, TEXT, BACK);
-        text(81, 98, "OFFICIAL OPEN", 1, ACCENT, BACK);
+        text(24, 48, "FM1-AKDM", 4, TEXT, BACK);
         text((240 - 12 * (sizeof FM1_RELEASE_VERSION - 1)) / 2, 120,
              FM1_RELEASE_VERSION, 2, TEXT, BACK);
         text(102, 208, "M-VAVE", 1, DIM, BACK);

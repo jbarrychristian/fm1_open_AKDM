@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="referrer" content="no-referrer">
-<title>FM1 工作台</title>
+<title>FM1-AKDM 工作台</title>
 <style>
 :root{color-scheme:dark;font:15px/1.65 system-ui,-apple-system,"Segoe UI",sans-serif;background:#121518;color:#e2e7e9;--accent:#aae4c8;--muted:#859293}
 *{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 50% 25%,#252c2c80,transparent 65%);min-height:100vh}main{max-width:1160px;margin:auto;padding:34px 36px 24px}header{display:flex;align-items:center;justify-content:space-between;gap:16px;font-size:11px;letter-spacing:.16em;color:var(--muted)}header b{color:#d5dedc;letter-spacing:.2em}.version-tag{font:10px/1.4 Consolas,"Liberation Mono",monospace;letter-spacing:.08em}h1{font-size:32px;letter-spacing:-.04em;margin:20px 0 2px;font-weight:600}h2{font-size:22px;margin:0 0 10px}h3{font-size:18px}p{color:#99a7a8}main>p{margin:4px 0 22px;font-size:13px}a{color:var(--accent)}button,input,select{font:inherit}button{border:1px solid #465150;border-radius:7px;padding:9px 15px;cursor:pointer;background:#293230;color:#dde5e1;margin:5px 6px 5px 0;transition:background .12s,border-color .12s}button:hover{background:#384541;border-color:#758a80}button.primary{background:var(--accent);color:#172e24;border-color:var(--accent);font-weight:650}button.primary:hover{background:#c4f3da}button:disabled{opacity:.4;cursor:default}button:focus-visible,input:focus-visible,select:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:4px}[hidden]{display:none!important}nav{display:flex;gap:3px;border-bottom:1px solid #333c3b;margin-bottom:22px}nav button{background:transparent;border:0;border-radius:0;margin:0 22px 0 0;padding:10px 1px 13px;font-size:13px;color:#889a98;border-bottom:2px solid transparent}nav button[aria-selected=true]{color:#d1eee0;border-bottom-color:var(--accent)}section{padding:22px;border:1px solid #343e3d;border-radius:12px;background:#1b2221;margin:20px 0}#tab-sim{border:0;background:none;padding:0;margin:0}#tab-library,#tab-update{max-width:720px;margin:28px auto}.sim-toolbar{display:flex;gap:10px;align-items:center;margin:0 0 18px;flex-wrap:wrap}.sim-toolbar button{margin:0;font-size:12px;padding:8px 14px}.sim-health{display:flex;align-items:center;gap:9px;font-size:11px;color:#96a8a0}.sim-health:before{content:"";width:6px;height:6px;background:var(--accent);border-radius:50%;box-shadow:0 0 8px #aae4c844}.sim-health span+span{border-left:1px solid #46534d;padding-left:9px;color:#6f8379}.sim-toolbar label{margin:0 0 0 auto;display:flex;gap:8px;align-items:center;font-size:11px;color:#879b93}.sim-toolbar input{width:85px;accent-color:var(--accent)}
@@ -96,7 +96,7 @@ button{border-radius:7px;background:#223039;border-color:#3b4b54;color:#d6e3e6;f
 <dl><dt>固件</dt><dd id="profile">正在校验…</dd><dt>版本</dt><dd id="firmware-version"></dd></dl>
 <details class="technical-details"><summary>固件详情</summary><dl><dt>文件大小</dt><dd id="size"></dd><dt>构建编号</dt><dd><code id="version"></code></dd></dl></details>
 <label class="update-choice"><input id="backup" type="checkbox"> 已保存需要保留的音色、工程和采样</label>
-<details id="update-options" class="library-group"><summary>恢复与强制更新</summary><p><button id="stock-restore" disabled>刷回原厂 V15</button><button id="open-firmware" hidden>切回官方 Open 固件</button></p><p><label class="update-choice"><input id="force-update" type="checkbox"> 强制烧录（其他固件迁移）</label></p></details>
+<details id="update-options" class="library-group"><summary>恢复与强制更新</summary><p><button id="stock-restore" disabled>刷回原厂 V15</button><button id="open-firmware" hidden>切回 FM1-AKDM 固件</button></p><p><label class="update-choice"><input id="force-update" type="checkbox"> 强制烧录（其他固件迁移）</label></p></details>
 <p id="stock-warning" role="alert" hidden>回刷将安装原厂 V15，并覆盖四个音色库，恢复 128 个出厂音色。Open 项目与采样格式不兼容，请先导出备份。已是 V15 时只恢复音色；确认后才开始写入。</p>
 <p id="force-warning" role="alert" hidden>警告：内置固件可能与当前设备不兼容。强制烧录可能清除数据、导致无法开机，并需要专用工具恢复。请只连接目标 FM1；不支持 USB-MIDI 升级协议的固件仍无法通过本页烧录。</p>
 <p id="device-identity"></p>
@@ -260,7 +260,7 @@ button{border-radius:7px;background:#223039;border-color:#3b4b54;color:#d6e3e6;f
 <h4>蓝牙设置</h4><p>长按 SEQ，SELECT 选 BLUETOOTH / CLOCK，SAVE 打开蓝牙／时钟页。K1 为蓝牙总开关，K2 为蓝牙音频，K3 只选 BLE MIDI 的 DEVICE／HOST 角色，K4 选择时钟。蓝牙打开时 MIDI 服务自动可用；出厂默认蓝牙和音频打开、DEVICE 角色、内部时钟。PRESETS 选择屏幕下方操作，SAVE 执行：主设置页可打开 HOST 设备列表或清除 MIDI 配对；列表中 SELECT 选设备，PRESETS 选连接、扫描、断开或返回设置。清除配对仍需再次 SAVE 确认，HOME 取消。SEQ、EDIT 等上排功能键仍可直接切页。</p><p>网页可以预览设置页面；实际蓝牙扫描、配对和音频输入要在实机上操作。</p>
 <h4>INT 与 MIDI 时钟</h4><p><strong>INT：</strong>FM1 使用内部速度，K4 可设 30–300 BPM。<strong>MIDI：</strong>跟随外部 MIDI Clock，需外部发送 Start／Continue 才开始或继续。此时旋转速度不会改变外部速度。超过约两秒收不到时钟，屏幕显示 LOST；检查外部设备是否发送时钟，或切回 INT。</p>
 </article>
-<article id="manual-update" class="manual-chapter" tabindex="-1"><h3>09 · 更新固件</h3><p>点击“刷回原厂 V15”，连接设备、勾选备份确认，再点击“刷入原厂 V15”并确认。网页会安装内置 V15，随后恢复四个库的 128 个出厂音色；已有音色会被覆盖。已是 V15 的设备会显示“恢复原厂音色”，无需重复刷固件。恢复中断时，重新连接并重试；完成后切换音色试听。Open 项目与采样不能用于原厂固件，原厂也不提供 Open 的构建哈希读回或项目库功能。回到 Open 时，点击“切回官方 Open 固件”并按强制烧录流程操作。不支持外部固件文件。</p>
+<article id="manual-update" class="manual-chapter" tabindex="-1"><h3>09 · 更新固件</h3><p>点击“刷回原厂 V15”，连接设备、勾选备份确认，再点击“刷入原厂 V15”并确认。网页会安装内置 V15，随后恢复四个库的 128 个出厂音色；已有音色会被覆盖。已是 V15 的设备会显示“恢复原厂音色”，无需重复刷固件。恢复中断时，重新连接并重试；完成后切换音色试听。Open 项目与采样不能用于原厂固件，原厂也不提供 Open 的构建哈希读回或项目库功能。回到 Open 时，点击“切回 FM1-AKDM 固件”并按强制烧录流程操作。不支持外部固件文件。</p>
 <ol><li>在“项目与音色”备份当前项目与采样库，其他需要保留的项目槽也逐一载入并备份。独立音色库 A–D 四组分别“读取此组”并“导出此组 .syx”；PLAY 轨的音色修改另行导出，DX7 也可存入独立库后再备份。</li><li>打开最新版工作台的“设备更新”，通过 USB 数据线连接 FM1。固件已内置。</li><li>勾选“已保存需要保留的音色、工程和采样”，点击“连接设备”，允许 MIDI／SysEx。</li><li>核对设备提示，点击“开始更新”，保持供电和 USB 连接直到完成。</li><li>等待重启及版本核对。如果提示采样未就绪，在采样页写入对应的 .fm1s 备份。写入内置采样库会替换全部 8 槽，不能找回原来的自定义采样。</li></ol>
 <p>正常完成的同布局更新会保留有效项目槽和采样库；刷写前仍请分别备份工程、音色和采样。设备重启后，未保存的内存编辑不会自动恢复。固件更新也不会自动把网页仿真中的项目传到设备。</p><p>若更新中断或设备停在升级界面，保留<strong>同一版本的这张网页</strong>，检查连接后重新连接并按提示继续。从其他固件迁移时，开启“强制烧录”，重新连接并确认兼容风险。固件不支持 USB-MIDI 升级协议时，请使用该版本配套的恢复工具。跨固件迁移可能清除项目和采样，务必先备份。</p>
 <p>正常连接已识别其他固件（例如 FM-1_015）时，点击 启用强制烧录并重新连接。这一步只开启模式并重新连接，不会写入固件。页面会说明接下来缺少哪一步；确认已备份后，再点 强制烧录 并确认兼容风险才会开始。也可点击强制烧录勾选行的任意位置开启。设备仍需支持兼容的 USB-MIDI 升级协议。</p><p>拔插 USB 后重新点击连接即可；页面会清除旧设备信息。烧录与项目库切换时按提示重新连接。固件写入后请等待采样检查完成；“固件已更新”但采样未就绪时，只需检查或恢复采样库，无需重复烧录。</p><p>连接失败时，展开“连接详情”查看本次浏览器检测到的 MIDI IN／OUT。未发现端口、端口无法配对、设备未回复型号是不同的问题。先关闭其他 MIDI 软件和更新网页，再重新开机、插拔 USB 并连接；强制烧录不能跳过设备握手。</p></article>
@@ -473,7 +473,7 @@ button{border-radius:7px;background:#223039;border-color:#3b4b54;color:#d6e3e6;f
   $('connect').addEventListener('click',connectDevice);
   $('force-activate').addEventListener('click',()=>setForceMode(true,true));
   function packageDetails(){
-    FM1I18n.text($('profile'),pkg.kind==='stock'?'原厂 V15（FM-1_015）':'官方 Open 固件');
+    FM1I18n.text($('profile'),pkg.kind==='stock'?'原厂 V15（FM-1_015）':'FM1-AKDM 固件');
     $('firmware-version').textContent=pkg.release_version||'—';
     FM1I18n.text($('version'),pkg.kind==='stock'?'FM-1_015':pkg.build_id.slice(0,16));$('version').title=pkg.kind==='stock'?pkg.sha256:pkg.build_id;
     FM1I18n.text($('size'),(pkg.bytes/1024).toFixed(1)+' KiB');
