@@ -18,7 +18,7 @@
 enum { KEYS, BASS, ARP, LEAD, PAD, BEAT, PERC, STAB };
 enum { TONEWHEEL, COMBO_ORGAN, PIPE_ORGAN, WURLI, STAGE_EP, HARPSICHORD,
        CLAV, MINI_LEAD, SYNC_LEAD, TAURUS, MOOG_BASS, STRINGS,
-       TAPE_FLUTE, TAPE_CHOIR, SYNTH_BRASS, PROG_PAD };
+       TAPE_FLUTE, TAPE_CHOIR, SYNTH_BRASS, PROG_PAD, POLY_VOX, DEMO_TONES };
 /* 303 recipes: warm bass, deep pedal, singing lead, square bass. */
 enum { AN_BASS, AN_PEDAL, AN_LEAD, AN_SQUARE };
 struct part {
@@ -31,6 +31,7 @@ struct scene {
     uint8_t decay, delay_steps, feedback, fx_level;
     struct part part[5];
     uint8_t meter; /* enum meter; 0 is plain 4/4 */
+    uint8_t seq;   /* ARP parts: 0 eighths up the chord, 1 sixteenth sequencer line */
 };
 /* Mixed-meter loops. The sequencer loops over 16..64 steps in pages of
  * 16, so odd bars are packed into one 64-step loop with a short filler bar.
@@ -64,26 +65,26 @@ static const struct meter_shape meters[METERS] = {
  * get tempo-related echoes. delay_steps counts sixteenths at the initial
  * tempo and must stay within the delay range (about bpm / 22 steps).
  * Rhythms: 0 straight, 1 driving, 2 half-time, 3 shuffle, 4 gallop,
- * 5 3+3+2, 6 four-floor, 7 stomp. Motif picks the bass figure and melody;
+ * 5 3+3+2, 6 four-floor, 7 stomp, 8 rhythm box, 9 new wave. Motif picks the bass figure and melody;
  * its low bit also picks the chord progression. The optional last field
  * picks a mixed meter; drums, bass and chords then follow its beat groups. */
 static const struct scene scenes[GROOVE_FACTORY_PROJECTS] = {
-    {"ARENA ROCK",  124,40,0, 0,1,0,4, 60,3,30,74, {FM(TONEWHEEL,KEYS,94,3,0), FM(MOOG_BASS,BASS,94,0,0), SA(BEAT,88), FM(SYNC_LEAD,LEAD,78,3,2)}, M44},
-    {"GALLOP PROG", 140,45,1, 0,4,3,4, 52,3,28,70, {FM(SYNTH_BRASS,STAB,88,3,0), AC(AN_SQUARE,BASS,38,0,0), SA(BEAT,88), FM(MINI_LEAD,LEAD,80,3,3)}, M44},
-    {"CATHEDRAL",    76,36,0, 0,2,2,3, 98,3,40,90, {FM(PIPE_ORGAN,PAD,98,7,0), FM(TAURUS,BASS,92,1,0), FM(MINI_LEAD,LEAD,78,5,3)}, M44},
-    {"RONDO 7/8",   132,40,0, 0,5,5,5, 58,2,30,72, {FM(TONEWHEEL,STAB,88,2,0), AC(AN_BASS,BASS,40,0,0), SA(BEAT,86), FM(MINI_LEAD,LEAD,80,3,2), FM(HARPSICHORD,ARP,66,3,1)}, M78},
-    {"SYMPHO POP",  120,38,0, 0,6,0,5, 70,2,30,76, {FM(STRINGS,PAD,86,5,0), FM(STAGE_EP,KEYS,96,4,0), FM(MOOG_BASS,BASS,90,0,0), SA(BEAT,86), FM(HARPSICHORD,ARP,62,3,2)}, M44},
-    {"LUNAR DRIFT",  64,38,1, 0,2,2,5, 92,2,54,84, {FM(PROG_PAD,PAD,86,7,0), FM(STAGE_EP,KEYS,94,5,2), FM(TAURUS,BASS,92,0,0), SA(BEAT,76), FM(MINI_LEAD,LEAD,74,6,6)}, M44},
-    {"ASTRO ORGAN", 112,40,1, 0,0,1,4, 72,3,46,78, {FM(COMBO_ORGAN,STAB,88,4,3), FM(MOOG_BASS,BASS,90,0,0), SA(BEAT,84), AC(AN_LEAD,ARP,28,3,4)}, M44},
-    {"WURLI BOUNCE",104,43,0,30,3,4,4, 56,2,26,70, {FM(WURLI,KEYS,102,3,0), FM(MOOG_BASS,BASS,88,0,0), SA(BEAT,86), FM(TAPE_FLUTE,LEAD,78,4,2)}, M44},
-    {"BAROQUE ROCK", 92,46,0, 0,0,2,4, 76,2,30,78, {FM(HARPSICHORD,KEYS,92,4,0), FM(TAPE_CHOIR,PAD,82,6,0), FM(TAURUS,BASS,88,0,0), SA(BEAT,86)}, M44},
-    {"TAPE CHOIR",   70,40,1, 0,2,2,4, 90,3,44,82, {FM(TAPE_CHOIR,PAD,88,6,0), FM(TAPE_FLUTE,LEAD,82,5,2), FM(TAURUS,BASS,92,0,0), PL(1,ARP,72,5,4)}, M44},
-    {"ODYSSEY 5/4", 136,42,1, 0,5,3,5, 60,3,32,72, {FM(SYNTH_BRASS,STAB,88,3,0), FM(MOOG_BASS,BASS,92,0,0), SA(BEAT,86), FM(SYNC_LEAD,LEAD,78,3,2), FM(PROG_PAD,PAD,60,5,0)}, M54},
-    {"DUEL 9/8",    128,45,1, 0,1,5,5, 58,3,30,72, {FM(MINI_LEAD,LEAD,82,3,2), AC(AN_SQUARE,BASS,38,0,0), SA(BEAT,86), FM(SYNC_LEAD,ARP,66,3,3), FM(SYNTH_BRASS,PAD,58,4,0)}, M98},
-    {"FUSION 11/8", 150,40,1, 0,4,1,5, 50,3,24,66, {FM(MINI_LEAD,LEAD,82,2,1), FM(CLAV,STAB,90,2,0), AC(AN_BASS,BASS,40,0,0), SA(BEAT,88), FM(TONEWHEEL,PAD,62,3,0)}, M118},
-    {"PEDAL 7/4",   100,40,0, 0,0,2,4, 78,3,36,78, {FM(TAURUS,BASS,100,0,0), FM(PROG_PAD,PAD,76,6,0), SA(BEAT,84), FM(MINI_LEAD,LEAD,78,4,3)}, M74},
-    {"ARP HORIZON", 116,38,1, 0,6,4,5, 88,3,52,84, {AC(AN_LEAD,ARP,30,4,4), FM(STRINGS,PAD,88,6,0), FM(TAPE_CHOIR,KEYS,70,6,2), DR(80), FM(MOOG_BASS,BASS,86,0,0)}, M44},
-    {"SLOW BURN",    60,43,1, 0,2,4,4, 90,2,48,82, {FM(TONEWHEEL,PAD,76,6,0), FM(TAURUS,BASS,90,0,0), SA(BEAT,76), FM(MINI_LEAD,LEAD,80,6,5)}, M44}
+    {"ARENA ROCK",  124,40,0, 0,1,0,4, 60,3,30,74, {FM(TONEWHEEL,KEYS,94,3,0), FM(MOOG_BASS,BASS,94,0,0), SA(BEAT,88), FM(SYNC_LEAD,LEAD,78,3,2)}, M44, 0},
+    {"GALLOP PROG", 140,45,1, 0,4,3,4, 52,3,28,70, {FM(SYNTH_BRASS,STAB,88,3,0), AC(AN_SQUARE,BASS,38,0,0), SA(BEAT,88), FM(MINI_LEAD,LEAD,80,3,3)}, M44, 0},
+    {"CATHEDRAL",    76,36,0, 0,2,2,3, 98,3,40,90, {FM(PIPE_ORGAN,PAD,98,7,0), FM(TAURUS,BASS,92,1,0), FM(MINI_LEAD,LEAD,78,5,3)}, M44, 0},
+    {"RONDO 7/8",   132,40,0, 0,5,5,5, 58,2,30,72, {FM(TONEWHEEL,STAB,88,2,0), AC(AN_BASS,BASS,40,0,0), SA(BEAT,86), FM(MINI_LEAD,LEAD,80,3,2), FM(HARPSICHORD,ARP,66,3,1)}, M78, 0},
+    {"SYMPHO POP",  120,38,0, 0,6,0,5, 70,2,30,76, {FM(STRINGS,PAD,86,5,0), FM(STAGE_EP,KEYS,96,4,0), FM(MOOG_BASS,BASS,90,0,0), SA(BEAT,86), FM(HARPSICHORD,ARP,62,3,2)}, M44, 0},
+    {"LUNAR DRIFT",  64,38,1, 0,2,2,5, 92,2,54,84, {FM(PROG_PAD,PAD,86,7,0), FM(STAGE_EP,KEYS,94,5,2), FM(TAURUS,BASS,92,0,0), SA(BEAT,76), FM(MINI_LEAD,LEAD,74,6,6)}, M44, 0},
+    {"ASTRO ORGAN", 112,40,1, 0,0,1,4, 72,3,46,78, {FM(COMBO_ORGAN,STAB,88,4,3), FM(MOOG_BASS,BASS,90,0,0), SA(BEAT,84), AC(AN_LEAD,ARP,28,3,4)}, M44, 0},
+    {"WURLI BOUNCE",104,43,0,30,3,4,4, 56,2,26,70, {FM(WURLI,KEYS,102,3,0), FM(MOOG_BASS,BASS,88,0,0), SA(BEAT,86), FM(TAPE_FLUTE,LEAD,78,4,2)}, M44, 0},
+    {"BAROQUE ROCK", 92,46,0, 0,0,2,4, 76,2,30,78, {FM(HARPSICHORD,KEYS,92,4,0), FM(TAPE_CHOIR,PAD,82,6,0), FM(TAURUS,BASS,88,0,0), SA(BEAT,86)}, M44, 0},
+    {"TAPE CHOIR",   70,40,1, 0,2,2,4, 90,3,44,82, {FM(TAPE_CHOIR,PAD,88,6,0), FM(TAPE_FLUTE,LEAD,82,5,2), FM(TAURUS,BASS,92,0,0), PL(1,ARP,72,5,4)}, M44, 0},
+    {"ODYSSEY 5/4", 136,42,1, 0,5,3,5, 60,3,32,72, {FM(SYNTH_BRASS,STAB,88,3,0), FM(MOOG_BASS,BASS,92,0,0), SA(BEAT,86), FM(SYNC_LEAD,LEAD,78,3,2), FM(PROG_PAD,PAD,60,5,0)}, M54, 0},
+    {"DUEL 9/8",    128,45,1, 0,1,5,5, 58,3,30,72, {FM(MINI_LEAD,LEAD,82,3,2), AC(AN_SQUARE,BASS,38,0,0), SA(BEAT,86), FM(SYNC_LEAD,ARP,66,3,3), FM(SYNTH_BRASS,PAD,58,4,0)}, M98, 0},
+    {"FUSION 11/8", 150,40,1, 0,4,1,5, 50,3,24,66, {FM(MINI_LEAD,LEAD,82,2,1), FM(CLAV,STAB,90,2,0), AC(AN_BASS,BASS,40,0,0), SA(BEAT,88), FM(TONEWHEEL,PAD,62,3,0)}, M118, 0},
+    {"PEDAL 7/4",   100,40,0, 0,0,2,4, 78,3,36,78, {FM(TAURUS,BASS,100,0,0), FM(PROG_PAD,PAD,76,6,0), SA(BEAT,84), FM(MINI_LEAD,LEAD,78,4,3)}, M74, 0},
+    {"SEQUENCER 78",118,40,1, 0,8,0,5, 86,3,46,82, {AC(AN_LEAD,ARP,30,3,3), FM(STRINGS,PAD,90,6,0), FM(SYNC_LEAD,LEAD,74,5,3), DR(82), FM(MOOG_BASS,BASS,84,0,0)}, M44, 1},
+    {"COLD MACHINE",126,41,1, 0,9,0,4, 52,2,30,70, {FM(MOOG_BASS,BASS,96,0,0), FM(POLY_VOX,PAD,80,4,0), SA(BEAT,90), FM(MINI_LEAD,LEAD,72,3,2)}, M44, 0}
 };
 #undef FM
 #undef AC
@@ -93,7 +94,7 @@ static const struct scene scenes[GROOVE_FACTORY_PROJECTS] = {
 #undef SA
 
 /* Kick, backbeat, closed hat, open hat and a small percussion response. */
-static const uint16_t beats[8][5] = {
+static const uint16_t beats[10][5] = {
     {0x0501,0x1010,0x5555,0x0000,0x8000}, /* straight rock */
     {0x0141,0x1010,0x5555,0x4000,0x0080}, /* driving eighths */
     {0x0401,0x0100,0x5555,0x0000,0x2000}, /* half-time */
@@ -101,7 +102,9 @@ static const uint16_t beats[8][5] = {
     {0x0909,0x1010,0xffff,0x0000,0x8000}, /* gallop sixteenths */
     {0x4949,0x1010,0x5555,0x0000,0x0080}, /* 3+3+2 accents */
     {0x1111,0x1010,0x1111,0x4444,0x0080}, /* four on the floor */
-    {0x0505,0x1010,0x0000,0x0000,0x0000}  /* stomp and backbeat */
+    {0x0505,0x1010,0x0000,0x0000,0x0000}, /* stomp and backbeat */
+    {0x0101,0x1010,0xffff,0x0000,0x4444}, /* rhythm box, sixteenth hats */
+    {0x0101,0x1010,0x5555,0x0000,0x0000}  /* cold, steady new wave */
 };
 static const uint16_t bass_masks[6] = {0x5555,0x1525,0x0101,0xdddd,0x7575,0x4929};
 static const int8_t melodies[6][16] = {
@@ -123,10 +126,10 @@ static unsigned bar_minor(const struct scene *s, unsigned bar)
     static const uint8_t quality[4][4] = {{0,0,1,0},{1,0,0,0},{0,0,0,0},{1,1,0,0}};
     return quality[s->minor + 2*(s->motif & 1U)][bar];
 }
-static FM1_DSP_DATA const char fm_names[FM1_FM_FACTORY_PROGRAMS][11] = {
+static FM1_DSP_DATA const char fm_names[DEMO_TONES][11] = {
     "TONEWHEEL ","COMBO ORG ","PIPE ORGAN","WURLI     ","STAGE EP  ","HARPSICHRD",
     "FUNK CLAV ","MINI LEAD ","SYNC LEAD ","TAURUS    ","MOOG BASS ","STRINGS   ",
-    "TAPE FLUTE","TAPE CHOIR","SYNTHBRASS","PROG PAD  "
+    "TAPE FLUTE","TAPE CHOIR","SYNTHBRASS","PROG PAD  ","POLY VOX  "
 };
 /* Three independently voiced operator pairs (DX7 algorithm 5): body, colour
  * and transient. Pair 0's modulator carries the feedback. Organs replace
@@ -138,7 +141,7 @@ struct fm_voice {
     uint8_t attack, decay, settle, release, body, sustain, mod_attack, mod_release, feedback;
     struct fm_pair pair[3];
 };
-static FM1_DSP_DATA const struct fm_voice voices[FM1_FM_FACTORY_PROGRAMS] = {
+static FM1_DSP_DATA const struct fm_voice voices[DEMO_TONES] = {
     /* Organs: only attack, decay, settle, release and feedback apply. */
     {99,60,45,80,99,99,99,80,0, {{0},{0},{0}}},
     {99,60,45,82,99,99,99,82,0, {{0},{0},{0}}},
@@ -168,13 +171,15 @@ static FM1_DSP_DATA const struct fm_voice voices[FM1_FM_FACTORY_PROGRAMS] = {
     /* SYNTHBRASS: brightness swells after the attack. */
     {90,55,45,66,99,92,62,64,4, {{99,1,6,78,1,0,55,74},{93,1,9,72,1,0,55,70},{72,0,7,50,1,0,58,60}}},
     /* PROG PAD: slow, detuned and evolving. */
-    {45,40,32,44,96,92,40,46,1, {{91,1,5,52,1,0,40,70},{87,1,9,48,2,0,40,60},{72,0,7,40,1,0,40,55}}}
+    {45,40,32,44,96,92,40,46,1, {{91,1,5,52,1,0,40,70},{87,1,9,48,2,0,40,60},{72,0,7,40,1,0,40,55}}},
+    /* POLY VOX: bright, nasal polysynth ensemble (late-70s new wave). */
+    {86,50,40,60,99,95,86,60,5, {{96,1,3,80,1,0,60,86},{92,1,11,78,1,0,60,84},{76,2,7,64,1,0,60,78}}}
 };
 /* LFO per tone: speed, delay, pitch depth, amp depth, wave (0 triangle,
  * 4 sine), pitch sensitivity, carrier amp sensitivity. Speed 6 is about
  * 1 Hz, 33 about 5.5 Hz, 39 about 6.5 Hz. Read only when building. */
 struct fm_lfo { uint8_t speed, delay, pmd, amd, wave, pms, ams; };
-static const struct fm_lfo lfos[FM1_FM_FACTORY_PROGRAMS] = {
+static const struct fm_lfo lfos[DEMO_TONES] = {
     {39, 0, 5,14,4,2,1}, /* rotary speaker, fast */
     {34, 0,10, 0,0,3,0}, /* combo vibrato */
     { 6, 0, 0, 0,4,0,0},
@@ -190,7 +195,8 @@ static const struct fm_lfo lfos[FM1_FM_FACTORY_PROGRAMS] = {
     { 7, 0, 6, 0,0,2,0}, /* tape wow */
     { 8, 0, 6, 4,0,2,1},
     {33,60, 8, 0,4,2,0},
-    {20, 0, 6, 0,0,2,0}
+    {20, 0, 6, 0,0,2,0},
+    {38, 0, 8, 0,0,3,0}  /* ensemble */
 };
 /* Drawbars for the three organs: coarse ratio (0 = 0.5), fine, level, and
  * a small detune spread for tonewheel beating. */
@@ -383,6 +389,12 @@ int groove_factory_build(unsigned index, struct groove_project *p)
                     if (v->role == PAD) { gate = 15; tie = 1; }
                     else if (v->role == KEYS) { gate = 12; tie = i == 0 || (!odd && i == 8); }
                     else gate = 9;
+                } else if (v->role == ARP && s->seq) {
+                    /* Sixteenth sequencer: chord tones bouncing off the octave. */
+                    static const uint8_t line[16] = {0,3,2,3, 1,3,2,3, 0,3,2,4, 1,3,2,5};
+                    const unsigned tones[6] = {0,minor ? 3U : 4U,7,12,minor ? 10U : 11U,minor ? 15U : 16U};
+                    pitch = root + 12 + tones[line[i & 15U]];
+                    gate = 6;
                 } else if (v->role == ARP) {
                     if (i & 1U) continue;
                     const unsigned offsets[4] = {0,minor ? 3U : 4U,7,12};
