@@ -1,4 +1,4 @@
-# FM1-AKDM V14
+# FM1-AKDM V1
 
 English · [简体中文](README.zh-CN.md)
 

@@ -286,7 +286,7 @@ if ($Package) {
         throw 'Set FM1_SOURCE_URL or -SourceUrl to the HTTPS URL of the matching source archive, without credentials.'
     }
 }
-$versionMatch = [regex]::Match([IO.File]::ReadAllText((Join-Path $root 'app/version.h')), '(?m)^#define FM1_RELEASE_VERSION "(V(?:0[1-9]|[1-9][0-9]{1,2}))"\s*$')
+$versionMatch = [regex]::Match([IO.File]::ReadAllText((Join-Path $root 'app/version.h')), '(?m)^#define FM1_RELEASE_VERSION "(V[1-9][0-9]{0,2})"\s*$')
 if (!$versionMatch.Success) { throw 'Set FM1_RELEASE_VERSION in app/version.h.' }
 $releaseVersion = $versionMatch.Groups[1].Value
 $productMatch = [regex]::Match([IO.File]::ReadAllText((Join-Path $root 'app/version.h')), '(?m)^#define FM1_UPDATE_PRODUCT "(FM-1_8[0-9]{6})"\s*$')

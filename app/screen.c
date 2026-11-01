@@ -506,7 +506,7 @@ static __attribute__((noinline)) void overview(const struct groove_view v[8])
         cache->title_cache = title;
         paint_fill(0, 32, 240, 13, BACK);
         text(8, 35, project_name, 1, ACCENT, BACK);
-        text(86, 35, "OPEN " FM1_RELEASE_VERSION, 1, DIM, BACK);
+        text(86, 35, "AKDM " FM1_RELEASE_VERSION, 1, DIM, BACK);
         text(146, 35, step_follow ? "PAGE" : "STEP", 1, DIM, BACK);
         number(178, 35, step_follow ? first + 1 : cursor + 1, 2, 1, TEXT, BACK);
         text(190, 35, step_follow ? "-" : "/", 1, DIM, BACK);
