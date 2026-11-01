@@ -27,6 +27,12 @@ The 16 built-in FM tones, the four acid-engine recipes and the 16 demo projects 
 
 These are style sketches, not transcriptions of any recording. The 128-voice DX7 library is unchanged.
 
+## Panel themes (this fork)
+
+Seven screen themes borrow the colours of classic instruments: **FM1** (original), **JOVE 8** (black panel with red, orange and yellow button rows), **JUNE 60** (slate, cream, red and mustard), **WALNUT D** (black, orange and blue rockers, walnut cheeks), **OBELISK** (black with silver and blue trim), **ORACLE 5** (black, cream, red and gold, oak cheeks) and **SIX OPS** (brown panel, green and maroon membrane buttons, green display). The names nod to the instruments without using their trademarks.
+
+Hold **HOME** and press **GLO** to open the Bluetooth / clock page (also under ACTIONS as BT / CLOCK / THEME), then turn **SEL** to change the theme. It is a device preference: it applies immediately, saves after 1.5 s and survives power cycles. It is stored in an optional tail of the session/tuning sector, so existing tuning and track-role data keep their offsets; firmware without theme support ignores it.
+
 ## MIDI
 
 FM1 accepts DIN, USB and BLE MIDI input, with USB/BLE output. Default input channels 1–7 address tracks 1–7; channel 10 addresses track 8. Change each input channel on TRACK ROLE.

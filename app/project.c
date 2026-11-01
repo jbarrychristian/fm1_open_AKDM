@@ -36,7 +36,8 @@ static unsigned restore_pending, role_pending, settings_dirty;
 static uint32_t settings_changed;
 static uint32_t project_revision;
 static int settings_result;
-static unsigned session_dirty, session_pending;
+static unsigned session_dirty, session_pending, appearance_dirty;
+static uint32_t appearance_changed;
 static int recover_staging(void);
 /* Older SDKs retain their checkpoint/apply path; current engines defer the
  * checkpoint until every required voice allocation has succeeded. */
@@ -160,17 +161,31 @@ struct tuning_entry { uint32_t key; struct groove_tuning t[GROOVE_TRACKS]; uint3
 /* Optional tail leaves every existing tuning entry at its original offset. */
 enum { SESSION_MAGIC = 0x31534d46U };
 struct session_settings { uint32_t magic; uint8_t role[8], channel[8]; uint32_t crc; };
-struct tuning_sector { uint32_t magic, version; struct tuning_entry entry[GROOVE_PROJECT_SLOTS]; struct session_settings session; };
+/* A second optional tail (FM1-AKDM) holds the screen theme. Sectors written
+ * without it read as 0xff and fall back to the default theme. */
+enum { APPEARANCE_MAGIC = 0x31414d46U };
+struct appearance { uint32_t magic; uint8_t theme, reserved[3]; uint32_t crc; };
+struct tuning_sector { uint32_t magic, version; struct tuning_entry entry[GROOVE_PROJECT_SLOTS];
+                       struct session_settings session; struct appearance appearance; };
 struct tuning_block { uint32_t magic; struct groove_tuning t[GROOVE_TRACKS]; uint32_t crc; };
 _Static_assert(sizeof(struct groove_tuning) == 24, "tuning table layout");
 _Static_assert(sizeof(struct tuning_entry) == 200, "tuning entry layout");
 _Static_assert(sizeof(struct tuning_block) == GROOVE_TUNING_BLOCK_BYTES, "tuning block layout");
 _Static_assert(sizeof(struct tuning_sector) <= FM1_FLASH_SECTOR_BYTES, "one tuning sector");
-enum { LEGACY_TUNING_JOURNAL_MAGIC = 0x4a544d46U, TUNING_JOURNAL_MAGIC = 0x4b544d46U,
+/* Journals record how much of the sector they carry: legacy stops before
+ * the session tail, session stops before the appearance tail. */
+enum { LEGACY_TUNING_JOURNAL_MAGIC = 0x4a544d46U, SESSION_TUNING_JOURNAL_MAGIC = 0x4b544d46U,
+       TUNING_JOURNAL_MAGIC = 0x4c544d46U,
        TUNING_JOURNAL_ADDRESS = STAGING_SECTOR * FM1_FLASH_SECTOR_BYTES };
 struct tuning_journal { uint32_t magic, crc, commit; };
 _Static_assert(sizeof(struct tuning_journal) + sizeof(struct tuning_sector) <= FM1_FLASH_SECTOR_BYTES,
                "tuning journal fits shared staging");
+static unsigned journal_bytes(uint32_t magic)
+{
+    return magic == LEGACY_TUNING_JOURNAL_MAGIC ? offsetof(struct tuning_sector, session)
+         : magic == SESSION_TUNING_JOURNAL_MAGIC ? offsetof(struct tuning_sector, appearance)
+         : magic == TUNING_JOURNAL_MAGIC ? sizeof(struct tuning_sector) : 0;
+}
 static int flash_checksum(uint32_t address, unsigned bytes, uint32_t *result)
 {
     uint8_t buffer[64];
@@ -191,10 +206,9 @@ static int tuning_location(uint32_t *address)
     *address = GROOVE_TUNING_OFFSET;
     struct tuning_journal header;
     int r = fm1_flash_read(TUNING_JOURNAL_ADDRESS, &header, sizeof header);
-    if (r || (header.magic != TUNING_JOURNAL_MAGIC && header.magic != LEGACY_TUNING_JOURNAL_MAGIC) || header.commit) return r;
+    if (r || !journal_bytes(header.magic) || header.commit) return r;
     uint32_t crc, body = TUNING_JOURNAL_ADDRESS + sizeof header;
-    r = flash_checksum(body, header.magic == LEGACY_TUNING_JOURNAL_MAGIC
-        ? offsetof(struct tuning_sector, session) : sizeof(struct tuning_sector), &crc);
+    r = flash_checksum(body, journal_bytes(header.magic), &crc);
     if (!r && crc == header.crc) *address = body;
     return r;
 }
@@ -208,8 +222,7 @@ static int tuning_recover(void)
     struct tuning_journal header;
     r = fm1_flash_read(TUNING_JOURNAL_ADDRESS, &header, sizeof header);
     memset(data, 0xff, sizeof *data);
-    if (!r) r = fm1_flash_read(address, data, header.magic == LEGACY_TUNING_JOURNAL_MAGIC
-        ? offsetof(struct tuning_sector, session) : sizeof *data);
+    if (!r) r = fm1_flash_read(address, data, journal_bytes(header.magic));
     uint32_t expected = r ? 0 : ~groove_crc32(~0U, data, sizeof *data), actual;
     if (!r) r = fm1_flash_erase(GROOVE_TUNING_OFFSET);
     if (!r) r = fm1_flash_write(GROOVE_TUNING_OFFSET, data, sizeof *data);
@@ -766,6 +779,45 @@ static int session_settings_save(void)
     }
     free(s); return r;
 }
+static int appearance_valid(const struct appearance *a)
+{
+    return a->magic == APPEARANCE_MAGIC && a->theme < GROOVE_THEMES &&
+           a->crc == ~groove_crc32(~0U, a, offsetof(struct appearance, crc));
+}
+static int appearance_load(void)
+{
+    int r = tuning_blocked(); if (r) return r < 0 ? r : 0;
+    uint32_t address; r = tuning_location(&address);
+    struct appearance a;
+    if (!r) r = fm1_flash_read(address + offsetof(struct tuning_sector, appearance), &a, sizeof a);
+    if (!r && appearance_valid(&a)) groove_screen_theme_set(a.theme);
+    return r;
+}
+static int appearance_save(void)
+{
+    int r = tuning_blocked(); if (r) return r < 0 ? r : GROOVE_PROJECT_TUNING_SPACE;
+    r = tuning_upgrade(); if (!r) r = recover_staging(); if (r) return r;
+    struct tuning_sector *s = malloc(sizeof *s); if (!s) return GROOVE_PROJECT_MEMORY;
+    r = fm1_flash_read(GROOVE_TUNING_OFFSET, s, sizeof *s);
+    if (!r) {
+        if (s->magic != TUNING_MAGIC || s->version != TUNING_VERSION) {
+            memset(s, 0xff, sizeof *s); s->magic = TUNING_MAGIC; s->version = TUNING_VERSION;
+        }
+        struct appearance a = {.magic = APPEARANCE_MAGIC, .theme = (uint8_t)groove_screen_theme()};
+        a.crc = ~groove_crc32(~0U, &a, offsetof(struct appearance, crc));
+        if (memcmp(&s->appearance, &a, sizeof a)) { s->appearance = a; r = tuning_commit(s); }
+    }
+    free(s); return r;
+}
+int groove_settings_theme(int delta)
+{
+    int next = (int)groove_screen_theme() + delta % GROOVE_THEMES;
+    next = (next + GROOVE_THEMES) % GROOVE_THEMES;
+    if ((unsigned)next == groove_screen_theme()) return 0;
+    groove_screen_theme_set((unsigned)next);
+    appearance_dirty = 1; appearance_changed = fm1_millis();
+    return 0;
+}
 int groove_settings_track(unsigned track, unsigned parameter, int delta)
 {
     if (track >= 8 || parameter > 1) return GROOVE_PROJECT_INVALID;
@@ -783,7 +835,7 @@ void groove_project_init(void)
     groove_midi_defaults(&settings.midi);
     memcpy(project_name, "UNTITLED    ", 12);
     restore_pending = 2;
-    session_pending = 2; session_dirty = 0;
+    session_pending = 2; session_dirty = 0; appearance_dirty = 0;
     role_pending = 2;
     settings_dirty = 0;
     settings_result = 0;
@@ -809,6 +861,7 @@ void groove_project_poll(void)
     if (session_pending == 2) {
         int r = session_settings_load(1);
         if (r == FM1_FLASH_BUSY) return;
+        if (appearance_load() == FM1_FLASH_BUSY) return;
         session_pending = 1; if (r) settings_result = r;
     }
     if (restore_pending && groove_project_load_slot(settings.slot) != FM1_FLASH_BUSY) {
@@ -856,5 +909,12 @@ void groove_project_poll(void)
             settings_dirty = 0;
         else
             settings_changed = fm1_millis();
+    }
+    /* Theme changes save on their own, without rewriting the settings record. */
+    if (appearance_dirty && !settings_dirty && fm1_millis() - appearance_changed >= 1500U) {
+        int r = appearance_save();
+        settings_result = r;
+        if (!r) appearance_dirty = 0;
+        else appearance_changed = fm1_millis();
     }
 }
