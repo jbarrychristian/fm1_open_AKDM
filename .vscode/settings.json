@@ -1,0 +1,9 @@
+{
+  // Match the repository's line endings (.gitattributes) and keep SDK files
+  // byte-exact: the build checks them against sdk/manifest.json.
+  "files.eol": "\n",
+  "files.insertFinalNewline": false,
+  "files.trimTrailingWhitespace": false,
+  "files.associations": { "*.inc": "c", "*.in": "html" },
+  "search.exclude": { "build/**": true }
+}

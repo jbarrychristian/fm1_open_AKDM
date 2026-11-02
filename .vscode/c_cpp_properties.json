@@ -1,0 +1,24 @@
+{
+  // Code navigation and error squiggles. The device compiler is JieLi's
+  // PI32 clang; IntelliSense uses the host build flags instead, which hide
+  // the device-only memory section attributes.
+  "configurations": [
+    {
+      "name": "FM1",
+      "includePath": [
+        "${workspaceFolder}/app",
+        "${workspaceFolder}/app/synth",
+        "${workspaceFolder}/app/board",
+        "${workspaceFolder}/sdk/include",
+        "${workspaceFolder}/sdk/config",
+        "${workspaceFolder}/third_party/synth",
+        "${workspaceFolder}/web/engine",
+        "${workspaceFolder}/web/synth"
+      ],
+      "defines": ["FM1_HOST_TEST", "FM1_OPEN_WEB"],
+      "cStandard": "c11",
+      "intelliSenseMode": "windows-clang-x64"
+    }
+  ],
+  "version": 4
+}

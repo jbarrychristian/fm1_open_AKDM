@@ -79,6 +79,10 @@ The web version builds from the included C sources. Its first build downloads WA
 
 The [per-track tuning API](app/instrument.h) supports custom tuning; a dedicated tuning editor is not included.
 
+### Visual Studio Code
+
+Open the repository folder in VS Code and install the recommended extensions when prompted (C/C++ and PowerShell). **Ctrl+Shift+B** builds the firmware; **Terminal > Run Task** lists the browser preview, the flashing workbench and their open commands. After editing a file under `sdk/`, run **FM1: Refresh SDK manifest after editing sdk files** (or `tools/Update-SdkManifest.ps1`): the build stops with "SDK payload changed" until listed SDK files match `sdk/manifest.json`.
+
 ## License
 
 APP: [GPLv3 with the FM1 SDK linking exception](LICENSE.md). The device engine is supplied as a binary SDK with separate terms. Retain the applicable [SDK terms, third-party licenses and contributor notices](THIRD_PARTY.md) when distributing builds.

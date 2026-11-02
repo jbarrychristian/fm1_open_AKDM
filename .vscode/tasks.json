@@ -1,0 +1,54 @@
+{
+  // FM1-AKDM build tasks. Run with Ctrl+Shift+B (default) or
+  // Terminal > Run Task. Firmware builds need FM1_PI32_TOOLCHAIN set to the
+  // JieLi 2.5.3 pi32 folder (normally C:\JL\pi32); see README.md.
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "FM1: Build firmware (local test)",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\sdk\\Build.ps1", "-FirmwareOnly"],
+      "group": { "kind": "build", "isDefault": true },
+      "problemMatcher": "$gcc"
+    },
+    {
+      "label": "FM1: Build browser preview",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\tools\\Build-Web.ps1", "-LocalPreview"],
+      "group": "build",
+      "problemMatcher": "$gcc"
+    },
+    {
+      "label": "FM1: Open browser preview",
+      "type": "shell",
+      "command": "Start-Process \"${workspaceFolder}\\build\\preview\\index.html\"",
+      "options": { "shell": { "executable": "powershell.exe", "args": ["-NoProfile", "-Command"] } },
+      "problemMatcher": []
+    },
+    {
+      "label": "FM1: Build workbench with firmware (for flashing)",
+      "detail": "Needs FM1_SOURCE_URL: the HTTPS source archive of this exact commit.",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\sdk\\Build.ps1", "-Package"],
+      "group": "build",
+      "problemMatcher": "$gcc"
+    },
+    {
+      "label": "FM1: Refresh SDK manifest after editing sdk files",
+      "type": "process",
+      "command": "powershell.exe",
+      "args": ["-NoProfile", "-ExecutionPolicy", "Bypass", "-File", "${workspaceFolder}\\tools\\Update-SdkManifest.ps1"],
+      "problemMatcher": []
+    },
+    {
+      "label": "FM1: Open workbench",
+      "type": "shell",
+      "command": "Start-Process \"${workspaceFolder}\\build\\official-web\\FM1-Official-Open-Source.html\"",
+      "options": { "shell": { "executable": "powershell.exe", "args": ["-NoProfile", "-Command"] } },
+      "problemMatcher": []
+    }
+  ]
+}
